@@ -8,7 +8,7 @@ import hlt
 from hlt import constants
 
 # This library contains direction metadata to better interface with the game.
-from hlt.positionals import Direction
+from hlt.positionals import Position
 #from hlt.entity import Entity,Ship
 
 import random
@@ -32,6 +32,7 @@ logging.info("Successfully created bot! My Player ID is {}.".format(game.my_id))
 logging.info("this is the file with the ship counter set less than 5")
 """ <<<Game Loop>>> """
 ship_counter = 0
+
 while True:
     # This loop handles each turn of the game. The game object changes every turn, and you refresh that state by
     #   running update_frame().
@@ -50,6 +51,38 @@ while True:
     logging.info("Outside of For Loop")
     for ship in me.get_ships():
         logging.info("For Loop has begun")
+        logging.info(f"The Map Cell Ship Position: {game_map[ship.position]}")
+        logging.info(f"the true position of the ship: {ship.position}")
+        enemy_ship_counter = 0
+        for i in range(1,5):
+            zero = Position(0,i)
+            one = Position(0,-i)
+            two = Position(i,0)
+            three = Position(-i,0)
+            other_positions = [zero,one,two,three]
+            logging.info(other_positions)
+            if game_map[zero.__add__(ship.position)].is_occupied:
+                for aship in me.get_ships():
+                    if not game_map[aship.position] == (game_map[zero.__add__(ship.position)]):
+                        enemy_ship_counter += 1
+            elif (game_map[one.__add__(ship.position)]).is_occupied:
+                for aship in me.get_ships():
+                    if not game_map[aship.position] == (game_map[one.__add__(ship.position)]):
+                        enemy_ship_counter += 1
+            elif (game_map[two.__add__(ship.position)]).is_occupied:
+                for aship in me.get_ships():
+                    if not game_map[aship.position] == (game_map[two.__add__(ship.position)]):
+                        enemy_ship_counter += 1
+            elif (game_map[three.__add__(ship.position)]).is_occupied:
+                for aship in me.get_ships():
+                    if not game_map[aship.position] == (game_map[three.__add__(ship.position)]):
+                        enemy_ship_counter += 1
+        logging.info(f"Ship ID: {ship.id}")
+        logging.info(f"Enemy Ship Counter within the Inspired Radius: {enemy_ship_counter}")
+        if enemy_ship_counter >= 2:
+            logging.info("The Ship is inspired")
+        else:
+            logging.info("the ship is not inspired")
         # For each of your ships, move randomly if the ship is on a low halite location or the ship is full.
         #   Else, collect halite.
         logging.info(f"Ship ID: {ship.id}")
