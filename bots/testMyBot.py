@@ -116,7 +116,7 @@ while True:
     logging.info(f"this value is right above the if statement too_many_ships value: {too_many_ships}")
     if len(me.get_ships()) == 0:
         ship_counter = 0
-    if game.turn_number <= 350 and me.halite_amount >= constants.SHIP_COST and not game_map[me.shipyard].is_occupied and too_many_ships == 0 and ship_counter < 5:
+    if game.turn_number <= 350 and me.halite_amount >= constants.SHIP_COST and not game_map[me.shipyard].is_occupied and too_many_ships == 0 and ship_counter < 11:
         logging.info("Spawning Ships")
         command_queue.append(me.shipyard.spawn())
         ship_counter += 1 #using a counter because the 5th ship is just staying still for some reason
