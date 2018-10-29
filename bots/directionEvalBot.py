@@ -108,6 +108,7 @@ def evaluateBestMoveForShip(ship):
         return ship.stay_still()
     bestCell = findMostWealthyAdjacentCell(ship)
     if bestCell and game_map[bestCell + ship.position].halite_amount >= haliteNeededToSearch:
+        game_map[bestCell + ship.position].mark_unsafe(ship)
         return ship.move(Direction.convert((bestCell.x, bestCell.y)))
 
     return ship.move(game_map.naive_navigate(ship, shipStatus[ship.id]["wealthCellObjective"]))
