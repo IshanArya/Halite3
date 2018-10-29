@@ -28,10 +28,16 @@ while True:
     else:
         logging.info(f"Have {len(me.get_ships())}  ships")
         ships = me.get_ships()
-        ship0Move = game_map.naive_navigate(ships[0], Position(9, 8))
+        enemyPosition = Position(7, 5)
+        position0 = Position(11, 4)
+        position1 = Position(7, 6)
+        ship0Move = game_map.naive_navigate(ships[0], position0)
         command_queue.append(ships[0].move(ship0Move))
-        ship1Move = game_map.naive_navigate(ships[1], Position(7, 6))
+        ship1Move = game_map.naive_navigate(ships[1], position1)
         command_queue.append(ships[1].move(ship1Move))
+        if game_map[position0].is_occupied:
+            logging.info(f"Distance from friendly ship to enemy ship: {game_map.calculate_distance(enemyPosition, position0)}")
+            logging.info(f"Inspire radius: {constants.INSPIRATION_RADIUS}")
         
     
     if len(me.get_ships()) < maxNumberOfShips and me.halite_amount >= constants.SHIP_COST and not game_map[me.shipyard].is_occupied:

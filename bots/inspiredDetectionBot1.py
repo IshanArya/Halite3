@@ -26,22 +26,21 @@ while True:
         move = game_map.naive_navigate(ship, Position(7, 5))
         command_queue.append(ship.move(move))
         number_of_enemy_ships = 0
-        for i in range(-4, 4): #x coordinate
-            for j in range(-4, 4): #y coordinate
+        for i in range(-constants.INSPIRATION_RADIUS, constants.INSPIRATION_RADIUS + 1): #x coordinate
+            yCheck = constants.INSPIRATION_RADIUS - abs(i) #y values to check
+            for j in range(-yCheck, yCheck + 1): #y coordinate (+1 because the stop parameter is not included)
                 add_on = Position(i,j)
-                if i != 0 and j != 0:
-                    if game_map[add_on + ship.position].is_occupied:
-                        if game_map.calculate_distance(ship.position, add_on + ship.position) <= constants.INSPIRATION_RADIUS:
-                            isEnemyShip = True
-                            for aship in me.get_ships():
-                                if aship.id == (game_map[add_on + ship.position]).ship.id:
-                                    isEnemyShip = False
+                if game_map[add_on + ship.position].is_occupied:
+                    isEnemyShip = True
+                    for aship in me.get_ships():
+                        if aship.id == (game_map[add_on + ship.position]).ship.id:
+                            isEnemyShip = False
 
-                            if isEnemyShip:
-                                number_of_enemy_ships += 1
-                                logging.info(f"Detected ship: {(game_map[add_on + ship.position]).ship.id}")
-                                if number_of_enemy_ships >= 2:
-                                    break
+                    if isEnemyShip:
+                        number_of_enemy_ships += 1
+                        logging.info(f"Detected ship: {(game_map[add_on + ship.position]).ship.id}")
+                        if number_of_enemy_ships >= 2:
+                            break
 
 
         logging.info(f"Ship ID: {ship.id}")
