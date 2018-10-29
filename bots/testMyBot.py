@@ -49,31 +49,22 @@ while True:
     directions_chosen = [] #creating this list and gonna add a bunch of positions so other ships cant simultaneously go to the same position resulting in collision
     ship_is_full_counter = 0
     logging.info("Outside of For Loop")
-    for ship in me.get_ships():
-        logging.info("For Loop has begun")
-        logging.info(f"Ship: {ship}")
-        logging.info(game_map[ship.position].ship)
-        logging.info(f"The Map Cell Ship Position: {game_map[ship.position]}")
-        logging.info(f"the true position of the ship: {ship.position}")
-        number_of_enemy_ships = 0
-        backward_range = [-4,-3,-2,-1,0,1,2,3,4] #reduced it to [-3,3] because [-4,4] didn't work, but i then changed it back again to 4 because i see a ship is inspired when one of the two enemy ships was four cells away
-        for i in backward_range: #x coordinate
-            for j in backward_range: #y coordinate
-                add_on = Position(i,j)
-                no_add_on = Position(0,0)
-                if add_on != no_add_on:
-                    if game_map[add_on.__add__(ship.position)].is_occupied:
-                        if game_map.calculate_distance(ship.position, add_on.__add__(ship.position)) <= constants.INSPIRATION_RADIUS:
-                            isEnemyShip = True
-                            for aship in me.get_ships():
-                                if aship == (game_map[add_on.__add__(ship.position)]).ship:
-                                    isEnemyShip = False
+    logging.info(f"Inspiration Radius: {constants.INSPIRATION_RADIUS}")
+    for i in range(-constants.INSPIRATION_RADIUS, constants.INSPIRATION_RADIUS + 1): #x coordinate
+    yCheck = constants.INSPIRATION_RADIUS - abs(i) #y values to check
+    for j in range(-yCheck, yCheck + 1): #y coordinate (+1 because the stop parameter is not included)
+        add_on = Position(i,j)
+        if game_map[add_on + ship.position].is_occupied:
+            isEnemyShip = True
+            for aship in me.get_ships():
+                if aship.id == (game_map[add_on + ship.position]).ship.id:
+                    isEnemyShip = False
 
-                            if isEnemyShip:
-                                number_of_enemy_ships += 1
-                                if number_of_enemy_ships >= 2:
-                                    break
-
+            if isEnemyShip:
+                number_of_enemy_ships += 1
+                logging.info(f"Detected ship: {(game_map[add_on + ship.position]).ship.id}")
+                if number_of_enemy_ships >= 2:
+                    break
 
         logging.info(f"Ship ID: {ship.id}")
         logging.info(f"Enemy Ship Counter within the Inspired Radius: {number_of_enemy_ships}")
