@@ -135,6 +135,10 @@ Network Trash Folder
 Temporary Items
 .apdisk
 
-#Game Ignors
+# VSCode
+.vscode/
+
+#Game Ignores
 replays/
 game_stuff/
+
