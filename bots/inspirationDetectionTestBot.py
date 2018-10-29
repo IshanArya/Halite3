@@ -53,25 +53,54 @@ while True:
         logging.info("For Loop has begun")
         logging.info(f"The Map Cell Ship Position: {game_map[ship.position]}")
         logging.info(f"the true position of the ship: {ship.position}")
-        number_of_enemy_ships = 0;
-        backward_range = [-4,-3,-2,-1,0,1,2,3,4] #reduced it to [-3,3] because [-4,4] didn't work, but i then changed it back again to 4 because i see a ship is inspired when one of the two enemy ships was four cells away
-        for i in backward_range: #x coordinate
-            for j in backward_range: #y coordinate
-                add_on = Position(i,j)
-                no_add_on = Position(0,0)
-                if add_on != no_add_on:
-                    if game_map[add_on.__add__(ship.position)].is_occupied:
-                        isEnemyShip = True
-                        for aship in me.get_ships():
-                            if aship == (game_map[add_on.__add__(ship.position)]).ship:
-                                isEnemyShip = False
-                        if isEnemyShip:
-                            number_of_enemy_ships += 1
+        enemy_ship_counter = 0
 
 
+
+
+        for i in range(1,5):
+            logging.info(f"The Map Cell Ship Position: {game_map[ship.position]}")
+            logging.info(f"the true position of the ship: {ship.position}")
+            zero = Position(0,i)
+            one = Position(0,-i)
+            two = Position(i,0)
+            three = Position(-i,0)
+            #logging.info(f"The Ship Position added to a tuple: {game_map[zero.__add__(ship.position)]}")
+            #logging.info(f"The Ship Position added to a tuple: {game_map[one.__add__(ship.position)]}")
+            #logging.info(f"The Ship Position added to a tuple: {game_map[two.__add__(ship.position)]}")
+            #logging.info(f"The Ship Position added to a tuple: {game_map[three.__add__(ship.position)]}")
+            #logging.info(f"the game map.ship thing: {game_map[zero.__add__(ship.position)].ship}")
+            if game_map[zero.__add__(ship.position)].is_occupied:
+                friend_ship_counter_zero = 0
+                for aship in me.get_ships():
+                    if not game_map[aship.position] == (game_map[zero.__add__(ship.position)]):
+                        friend_ship_counter_zero += 1
+                    if friend_ship_counter_zero == len(me.get_ships()): #if every one of our ships does not occupy
+                        enemy_ship_counter += 1
+            elif (game_map[one.__add__(ship.position)]).is_occupied:
+                friend_ship_counter_one = 0
+                for aship in me.get_ships():
+                    if not game_map[aship.position] == (game_map[one.__add__(ship.position)]):
+                        friend_ship_counter_one += 1
+                    if friend_ship_counter_one == len(me.get_ships()):
+                        enemy_ship_counter += 1
+            elif (game_map[two.__add__(ship.position)]).is_occupied:
+                friend_ship_counter_two = 0
+                for aship in me.get_ships():
+                    if not game_map[aship.position] == (game_map[two.__add__(ship.position)]):
+                        friend_ship_counter_two += 1
+                    if friend_ship_counter_two == len(me.get_ships()):
+                        enemy_ship_counter += 1
+            elif (game_map[three.__add__(ship.position)]).is_occupied:
+                friend_ship_counter_three = 0
+                for aship in me.get_ships():
+                    if not game_map[aship.position] == (game_map[three.__add__(ship.position)]):
+                        friend_ship_counter_three += 1
+                    if friend_ship_counter_three == len(me.get_ships()):
+                        enemy_ship_counter += 1
         logging.info(f"Ship ID: {ship.id}")
-        logging.info(f"Enemy Ship Counter within the Inspired Radius: {number_of_enemy_ships}")
-        if number_of_enemy_ships >= 2:
+        logging.info(f"Enemy Ship Counter within the Inspired Radius: {enemy_ship_counter}")
+        if enemy_ship_counter >= 2:
             logging.info("The Ship is inspired")
         else:
             logging.info("the ship is not inspired")

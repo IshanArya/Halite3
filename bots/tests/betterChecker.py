@@ -1,3 +1,4 @@
+number_of_enemy_ships = 0;
 for i in range(1,5):
     logging.info(f"The Map Cell Ship Position: {game_map[ship.position]}")
     logging.info(f"the true position of the ship: {ship.position}")
@@ -10,31 +11,40 @@ for i in range(1,5):
     #logging.info(f"The Ship Position added to a tuple: {game_map[two.__add__(ship.position)]}")
     #logging.info(f"The Ship Position added to a tuple: {game_map[three.__add__(ship.position)]}")
     #logging.info(f"the game map.ship thing: {game_map[zero.__add__(ship.position)].ship}")
+    
+    # if number_of_enemy_ships >= 2:
+    #     break
+
     if game_map[zero.__add__(ship.position)].is_occupied:
-        friend_ship_counter_zero = 0
+        isEnemyShip = True
         for aship in me.get_ships():
-            if not game_map[aship.position] == (game_map[zero.__add__(ship.position)]):
-                friend_ship_counter_zero += 1
-            if friend_ship_counter_zero == len(me.get_ships()): #if every one of our ships does not occupy
-                enemy_ship_counter += 1
+            if aship == (game_map[zero.__add__(ship.position)]).ship:
+                isEnemyShip = False
+        if isEnemyShip:
+            number_of_enemy_ships += 1
+
     elif (game_map[one.__add__(ship.position)]).is_occupied:
-        friend_ship_counter_one = 0
+        isEnemyShip = True
         for aship in me.get_ships():
-            if not game_map[aship.position] == (game_map[one.__add__(ship.position)]):
-                friend_ship_counter_one += 1
-            if friend_ship_counter_one == len(me.get_ships()):
-                enemy_ship_counter += 1
+            if aship == (game_map[one.__add__(ship.position)]).ship:
+                isEnemyShip = False
+        if isEnemyShip:
+            number_of_enemy_ships += 1
+
     elif (game_map[two.__add__(ship.position)]).is_occupied:
-        friend_ship_counter_two = 0
+        isEnemyShip = True
         for aship in me.get_ships():
-            if not game_map[aship.position] == (game_map[two.__add__(ship.position)]):
-                friend_ship_counter_two += 1
-            if friend_ship_counter_two == len(me.get_ships()):
-                enemy_ship_counter += 1
+            if aship == (game_map[two.__add__(ship.position)]).ship:
+                isEnemyShip = False
+        if isEnemyShip:
+            number_of_enemy_ships += 1
+
     elif (game_map[three.__add__(ship.position)]).is_occupied:
-        friend_ship_counter_three = 0
+        isEnemyShip = True
         for aship in me.get_ships():
-            if not game_map[aship.position] == (game_map[three.__add__(ship.position)]):
-                friend_ship_counter_three += 1
-            if friend_ship_counter_three == len(me.get_ships()):
-                enemy_ship_counter += 1
+            if aship == (game_map[three.__add__(ship.position)]).ship:
+                isEnemyShip = False
+        if isEnemyShip:
+            number_of_enemy_ships += 1
+
+logging.info(f"Enemy Ship Counter within the Inspired Radius: {number_of_enemy_ships}")
