@@ -53,7 +53,7 @@ while True:
         logging.info("For Loop has begun")
         logging.info(f"The Map Cell Ship Position: {game_map[ship.position]}")
         logging.info(f"the true position of the ship: {ship.position}")
-        number_of_enemy_ships = 0;
+        number_of_enemy_ships = 0
         backward_range = [-4,-3,-2,-1,0,1,2,3,4] #reduced it to [-3,3] because [-4,4] didn't work, but i then changed it back again to 4 because i see a ship is inspired when one of the two enemy ships was four cells away
         for i in backward_range: #x coordinate
             for j in backward_range: #y coordinate
