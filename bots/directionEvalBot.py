@@ -63,7 +63,8 @@ def findMostWealthyAdjacentCell(ship):
                 maxHalite = game_map[cardinal].halite_amount
                 bestCell = cardinal
     
-    return (bestCell - ship.position) # subtract ship.position to just get movement
+
+    return (bestCell - ship.position) if bestCell else bestCell # subtract ship.position to just get movement
 
 def evaluateBestMoveForShip(ship):
     if ship.id not in shipStatus:
