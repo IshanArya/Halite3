@@ -90,6 +90,7 @@ def evaluateBestMoveForShip(ship):
         logging.info(f"Ship {ship.id} will be moving to adjacent square.")
         return ship.move(Direction.convert((bestCell.x, bestCell.y)))
 
+
     logging.info(f"Ship {ship.id} will be navigating to destination.")
     navigatingShips.append(ship)
     return None

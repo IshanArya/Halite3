@@ -215,6 +215,16 @@ class GameMap:
 
         # subtract ship.position to just get movement
         return (bestCell - ship.position) if bestCell else bestCell
+    
+    def getWealthyCells(self):
+        wealthyMapCells = []
+        for i in range(self.width):
+            for j in range(self.height):
+                currentPosition = Position(i, j)
+                if self[currentPosition].halite_amount > constants.MAX_HALITE / 2 and not self[currentPosition].has_structure:
+                    wealthyMapCells.append(currentPosition)
+        # logging.info(f"All wealthy cells: {wealthyMapCells}")
+        return wealthyMapCells
 
     @staticmethod
     def _generate():
