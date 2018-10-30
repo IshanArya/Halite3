@@ -9,6 +9,7 @@ game_map = game.game_map
 
 maxNumberOfShips = 10
 shipStatus = {}
+navigatingShips = []
 wealthyMapCells = []
 nextWealthyCellToAssign = 0
 
@@ -53,19 +54,6 @@ def isShipInspired(ship): # check if ship is inspired
         return True
     return False
 
-def findMostWealthyAdjacentCell(ship):
-    maxHalite = 0
-    bestCell = None
-
-    for cardinal in ship.position.get_surrounding_cardinals():
-        if not game_map[cardinal].is_occupied:
-            if game_map[cardinal].halite_amount > maxHalite:
-                maxHalite = game_map[cardinal].halite_amount
-                bestCell = cardinal
-    
-
-    return (bestCell - ship.position) if bestCell else bestCell # subtract ship.position to just get movement
-
 def evaluateBestMoveForShip(ship):
     if ship.id not in shipStatus:
         global nextWealthyCellToAssign
@@ -83,21 +71,28 @@ def evaluateBestMoveForShip(ship):
             shipStatus[ship.id]["movement"] = "exploring"
         else:
             shipStatus[ship.id]["intention"] = "move"
-            return ship.move(game_map.naive_navigate(ship, me.shipyard.position))
+            logging.info(f"Ship {ship.id} will be returning.")
+            navigatingShips.append(ship)
+            return None
     
     # All commands if ship is exploring
     haliteNeededToSearch = constants.MAX_HALITE / 10
     if game_map[ship.position].halite_amount >= haliteNeededToSearch:
         shipStatus[ship.id]["intention"] = "stay"
+        game_map[ship.position].booked = True
+        logging.info(f"Ship {ship.id} will be staying.")
         return ship.stay_still()
 
     shipStatus[ship.id]["intention"] = "move"
-    bestCell = findMostWealthyAdjacentCell(ship)
+    bestCell = game_map.getMostWealthyAdjacentCell(ship)
     if bestCell and game_map[bestCell + ship.position].halite_amount >= haliteNeededToSearch:
-        game_map[bestCell + ship.position].mark_unsafe(ship)
+        game_map[bestCell + ship.position].booked = True
+        logging.info(f"Ship {ship.id} will be moving to adjacent square.")
         return ship.move(Direction.convert((bestCell.x, bestCell.y)))
 
-    return ship.move(game_map.naive_navigate(ship, shipStatus[ship.id]["wealthCellObjective"]))
+    logging.info(f"Ship {ship.id} will be navigating to destination.")
+    navigatingShips.append(ship)
+    return None
 
 
     
@@ -124,7 +119,31 @@ while True:
         logging.info("For Loop has begun")
         logging.info(f"The Map Cell Ship Position: {game_map[ship.position]}")
         logging.info(f"the true position of the ship: {ship.position}")
-        command_queue.append(evaluateBestMoveForShip(ship))
+        bestMoveForShip = evaluateBestMoveForShip(ship)
+        if bestMoveForShip:
+            logging.info(f"Best move for ship {ship.id} is {bestMoveForShip}")
+            command_queue.append(bestMoveForShip)
+    
+    stillNavigatingShips = []
+    logging.info(f"Navigating ships: {navigatingShips}")
+    for ship in navigatingShips:
+        logging.info(f"Still trying to find {ship.id} a move.")
+        direction = game_map.intelligent_navigate(
+            ship, 
+            shipStatus[ship.id]["wealthCellObjective"] if shipStatus[ship.id]["movement"] == "exploring" else me.shipyard.position)
+        if direction:
+            command_queue.append(ship.move(direction))
+        else:
+            stillNavigatingShips.append(ship)
+    for ship in stillNavigatingShips:
+        logging.info(f"Going to find {ship.id} a move this time.")
+        direction = game_map.intelligent_navigate(
+            ship,
+            shipStatus[ship.id]["wealthCellObjective"] if shipStatus[ship.id]["movement"] == "exploring" else me.shipyard.position,
+            True)
+        command_queue.append(ship.move(direction))
+    
+    navigatingShips = []
 
     if len(me.get_ships()) < maxNumberOfShips and me.halite_amount >= constants.SHIP_COST and not game_map[me.shipyard].is_occupied:
         command_queue.append(game.me.shipyard.spawn())
