@@ -62,25 +62,6 @@ def findMostWealthyAdjacentCell(ship):
             if game_map[cardinal].halite_amount > maxHalite:
                 maxHalite = game_map[cardinal].halite_amount
                 bestCell = cardinal
-    # leftCell = Position(-1, 0) + ship.position
-    # rightCell = Position(1, 0) + ship.position
-    # aboveCell = Position(0, 1) + ship.position
-    # belowCell = Position(0, -1) + ship.position
-    # if not game_map[leftCell].is_occupied:
-    #     maxHalite = game_map[leftCell].halite_amount
-    #     bestCell = leftCell
-    # if not game_map[rightCell].is_occupied:
-    #     if game_map[rightCell].halite_amount > maxHalite:
-    #         maxHalite = game_map[rightCell].halite_amount
-    #         bestCell = rightCell
-    # if not game_map[aboveCell].is_occupied:
-    #     if game_map[aboveCell].halite_amount > maxHalite:
-    #         maxHalite = game_map[aboveCell].halite_amount
-    #         bestCell = aboveCell
-    # if not game_map[belowCell].is_occupied:
-    #     if game_map[belowCell].halite_amount > maxHalite:
-    #         maxHalite = game_map[belowCell].halite_amount
-    #         bestCell = belowCell
     
     return (bestCell - ship.position) # subtract ship.position to just get movement
 
@@ -100,12 +81,16 @@ def evaluateBestMoveForShip(ship):
         if ship.position == me.shipyard.position:
             shipStatus[ship.id]["movement"] = "exploring"
         else:
+            shipStatus[ship.id]["intention"] = "move"
             return ship.move(game_map.naive_navigate(ship, me.shipyard.position))
     
     # All commands if ship is exploring
     haliteNeededToSearch = constants.MAX_HALITE / 10
     if game_map[ship.position].halite_amount >= haliteNeededToSearch:
+        shipStatus[ship.id]["intention"] = "stay"
         return ship.stay_still()
+
+    shipStatus[ship.id]["intention"] = "move"
     bestCell = findMostWealthyAdjacentCell(ship)
     if bestCell and game_map[bestCell + ship.position].halite_amount >= haliteNeededToSearch:
         game_map[bestCell + ship.position].mark_unsafe(ship)
