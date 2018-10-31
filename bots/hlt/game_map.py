@@ -7,6 +7,7 @@ from .positionals import Direction, Position
 from .common import read_input
 
 
+
 class MapCell:
     """A cell on the game map."""
     def __init__(self, position, halite_amount):
@@ -200,6 +201,7 @@ class GameMap:
                     if not self[target_pos].booked:
                         self[target_pos].booked = True
                         return direction
+                self[ship.position].booked = True
                 return Direction.Still
         return None
     
@@ -216,12 +218,12 @@ class GameMap:
         # subtract ship.position to just get movement
         return (bestCell - ship.position) if bestCell else bestCell
     
-    def getWealthyCells(self):
+    def getWealthyCells(self, wealthyMinimum):
         wealthyMapCells = []
         for i in range(self.width):
             for j in range(self.height):
                 currentPosition = Position(i, j)
-                if self[currentPosition].halite_amount > constants.MAX_HALITE / 2 and not self[currentPosition].has_structure:
+                if self[currentPosition].halite_amount > wealthyMinimum and not self[currentPosition].has_structure:
                     wealthyMapCells.append(currentPosition)
         # logging.info(f"All wealthy cells: {wealthyMapCells}")
         return wealthyMapCells

@@ -8,6 +8,8 @@ me = game.me
 game_map = game.game_map
 
 maxNumberOfShips = 10
+shipSpawnCounter = 0
+haliteNeededToSearch = 100
 shipStatus = {}
 navigatingShips = []
 wealthyMapCells = []
@@ -27,9 +29,22 @@ def findWealthyMapCells():  # populate wealthy cells list
     for i in range(int(scanStartIndex), int(scanEndIndex)):
         for j in range(game_map.height):
             currentPosition = Position(i, j)
-            if game_map[currentPosition].halite_amount > constants.MAX_HALITE / 2 and not game_map[currentPosition].has_structure:
+            if game_map[currentPosition].halite_amount > 400 and not game_map[currentPosition].has_structure:
                 wealthyMapCells.append(currentPosition)
     logging.info(f"All wealthy cells: {wealthyMapCells}")
+
+
+def getClosestShipyardAdjacentCell(ship):
+    shortestDistance = 1000
+    closestCell = None
+    for direction in Direction.get_all_cardinals():
+        target_pos = me.shipyard.position.directional_offset(direction)
+        currentDistance = game_map.calculate_distance(ship.position, target_pos)
+        if currentDistance < shortestDistance:
+            closestCell = target_pos
+            shortestDistance = currentDistance
+    
+    return closestCell
 
 def isShipInspired(ship): # check if ship is inspired
     numberOfEnemyShips = 0
@@ -55,14 +70,29 @@ def isShipInspired(ship): # check if ship is inspired
     return False
 
 def evaluateBestMoveForShip(ship):
+    global nextWealthyCellToAssign
     if ship.id not in shipStatus:
-        global nextWealthyCellToAssign
         shipStatus[ship.id] = {}
         shipStatus[ship.id]["movement"] = "exploring"
         logging.info(f"shipStatus Object: {shipStatus}")
         shipStatus[ship.id]["wealthCellObjective"] = wealthyMapCells[(nextWealthyCellToAssign) % len(wealthyMapCells)]
         nextWealthyCellToAssign += 1
     
+    distanceFromShipyard = game_map.calculate_distance(ship.position, me.shipyard.position)
+    turnsLeft = constants.MAX_TURNS - game.turn_number
+    logging.info(f"Distance from shipyard: {distanceFromShipyard}")
+    logging.info(f"Turns left: {turnsLeft}")
+    if shipStatus[ship.id]["movement"] == "ending" or distanceFromShipyard + 2 > turnsLeft:
+        logging.info(f"End game for {ship.id}")
+        shipStatus[ship.id]["movement"] = "ending"
+        if ship.position != me.shipyard.position:
+            shipStatus[ship.id]["wealthCellObjective"] = getClosestShipyardAdjacentCell(ship)
+            if ship.position == shipStatus[ship.id]["wealthCellObjective"]:
+                return ship.move(game_map.get_unsafe_moves(ship.position, me.shipyard.position)[0])
+            navigatingShips.append(ship)
+        return None
+            
+     
     if ship.halite_amount >= constants.MAX_HALITE:
         shipStatus[ship.id]["movement"] = "returning"
 
@@ -76,7 +106,6 @@ def evaluateBestMoveForShip(ship):
             return None
     
     # All commands if ship is exploring
-    haliteNeededToSearch = constants.MAX_HALITE / 10
     if game_map[ship.position].halite_amount >= haliteNeededToSearch:
         shipStatus[ship.id]["intention"] = "stay"
         game_map[ship.position].booked = True
@@ -90,8 +119,9 @@ def evaluateBestMoveForShip(ship):
         logging.info(f"Ship {ship.id} will be moving to adjacent square.")
         return ship.move(Direction.convert((bestCell.x, bestCell.y)))
 
-
-    logging.info(f"Ship {ship.id} will be navigating to destination.")
+    if game_map[shipStatus[ship.id]["wealthCellObjective"]].halite_amount < haliteNeededToSearch * 2:
+        shipStatus[ship.id]["wealthCellObjective"] = wealthyMapCells[(nextWealthyCellToAssign) % len(wealthyMapCells)]
+        nextWealthyCellToAssign += 1
     navigatingShips.append(ship)
     return None
 
@@ -114,7 +144,18 @@ while True:
     me = game.me
     game_map = game.game_map
 
+    if game.turn_number > 50 and game.turn_number % 10 == 0:
+        tempWealthyMapCells = game_map.getWealthyCells(haliteNeededToSearch * 2)
+        if tempWealthyMapCells:
+            wealthyMapCells = tempWealthyMapCells
+            nextWealthyCellToAssign = 0
+
     command_queue = []
+
+    if haliteNeededToSearch >= 20:
+        haliteNeededToSearch -= 0.5
+    elif haliteNeededToSearch >= 3:
+        haliteNeededToSearch -= 0.1
 
     for ship in me.get_ships():
         logging.info("For Loop has begun")
@@ -146,7 +187,7 @@ while True:
     
     navigatingShips = []
 
-    if len(me.get_ships()) < maxNumberOfShips and me.halite_amount >= constants.SHIP_COST and not game_map[me.shipyard].is_occupied:
+    if game.turn_number < constants.MAX_TURNS / 3 and me.halite_amount >= constants.SHIP_COST and not game_map[me.shipyard].is_occupied:
         command_queue.append(game.me.shipyard.spawn())
 
     game.end_turn(command_queue)
