@@ -14,6 +14,7 @@ class MapCell:
         self.halite_amount = halite_amount
         self.ship = None
         self.structure = None
+        self.booked = False
 
     @property
     def is_empty(self):
@@ -164,6 +165,67 @@ class GameMap:
 
         return Direction.Still
 
+    def intelligent_navigate(self, ship, destination, definite = False):
+        """
+        Returns a singular safe move towards the destination.
+        This works in conjunction with a ship tracker that tracks whether or not ships already have a move
+        WARNING: Do not use without understanding mechanics!
+
+        :param ship: The ship to move.
+        :param destination: Ending position
+        :param definite: whether to hestitate about booking or not
+        :return: boolean definite, A direction.
+        """
+
+        for direction in self.get_unsafe_moves(ship.position, destination):
+            target_pos = ship.position.directional_offset(direction)
+            if not self[target_pos].is_occupied and not self[target_pos].booked:
+                self[target_pos].booked = True
+                return direction
+
+        if definite:
+            for direction in self.get_unsafe_moves(ship.position, destination):
+                target_pos = ship.position.directional_offset(direction)
+                if not self[target_pos].booked:
+                    self[target_pos].booked = True
+                    return direction
+
+        if definite:
+            if not self[ship.position].booked:
+                self[ship.position].booked = True
+                return Direction.Still
+            else:
+                for direction in Direction.get_all_cardinals():
+                    target_pos = ship.position.directional_offset(direction)
+                    if not self[target_pos].booked:
+                        self[target_pos].booked = True
+                        return direction
+                return Direction.Still
+        return None
+    
+    def getMostWealthyAdjacentCell(self, ship):
+        maxHalite = 0
+        bestCell = None
+
+        for cardinal in ship.position.get_surrounding_cardinals():
+            if not self[cardinal].is_occupied and not self[cardinal].booked:
+                if self[cardinal].halite_amount > maxHalite:
+                    maxHalite = self[cardinal].halite_amount
+                    bestCell = cardinal
+
+        # subtract ship.position to just get movement
+        return (bestCell - ship.position) if bestCell else bestCell
+    
+    def getWealthyCells(self):
+        wealthyMapCells = []
+        for i in range(self.width):
+            for j in range(self.height):
+                currentPosition = Position(i, j)
+                if self[currentPosition].halite_amount > constants.MAX_HALITE / 2 and not self[currentPosition].has_structure:
+                    wealthyMapCells.append(currentPosition)
+        # logging.info(f"All wealthy cells: {wealthyMapCells}")
+        return wealthyMapCells
+
     @staticmethod
     def _generate():
         """
@@ -189,6 +251,7 @@ class GameMap:
         for y in range(self.height):
             for x in range(self.width):
                 self[Position(x, y)].ship = None
+                self[Position(x, y)].booked = False
 
         for _ in range(int(read_input())):
             cell_x, cell_y, cell_energy = map(int, read_input().split())
