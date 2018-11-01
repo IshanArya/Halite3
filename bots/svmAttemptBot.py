@@ -97,6 +97,7 @@ while True:
 
     #starter python code lmao
     for ship in me.get_ships():
+        logging.info("is this loop happening")
         # For each of your ships, move randomly if the ship is on a low halite location or the ship is full.
         #   Else, collect halite.
         distances_to_above_average = [] #contain tuples with distance and halite amount
@@ -127,21 +128,23 @@ while True:
         for i in range(0,len(halite_amount_at_cells_below_average)):
             below_average_cell_positions.append(halite_amount_at_cells_below_average[i][0])
         if ship.halite_amount < 900:
+            logging.info("Ship's halite amount is less than 900")
             if (ship.position in below_average_cell_positions or ship.position == me.shipyard.position):
                 minimum_value = min(above_average_final_normalized_score)
                 for i in range(0,len(above_average_final_normalized_score)):
                     if ship.halite_amount > 10*distances_to_above_average[i][0]: #this is just a ballpark i need to do that 10% calculation thing
                         if above_average_final_normalized_score[i] == minimum_value:
                             naive_direction = game_map.naive_navigate(ship,halite_amount_at_cells_above_average[i][0])
-                            ship.move(naive_direction)
+                            command_queue.append(ship.move(naive_direction))
                             break
-                    else:
-                        ship.stay_still()
+                else:
+                    command_queue.append(ship.stay_still())
             else:
-                ship.stay_still()
+                command_queue.append(ship.stay_still())
         else:
             naive_direction = game_map.naive_navigate(ship,me.shipyard.position)
-            ship.move(naive_direction)
+            command_queue.append(ship.move(naive_direction))
+
         ''' # I attempted to move the ship to location where the score i derived was less than the enemy normalized score
         list_of_lists_of_enemy = []
         for i in range(0,len(halite_amount_at_cells_above_average)):
@@ -196,8 +199,10 @@ while True:
 
     # If the game is in the first 200 turns and you have enough halite, spawn a ship.
     # Don't spawn a ship if you currently have a ship at port, though - the ships will collide.
+    logging.info("what is going on???")
     if game.turn_number <= 200 and me.halite_amount >= constants.SHIP_COST and not game_map[me.shipyard].is_occupied:
         command_queue.append(me.shipyard.spawn())
+        logging.info("Ship has just been spawned")
 
     # Send your moves back to the game environment, ending this turn.
     game.end_turn(command_queue)
