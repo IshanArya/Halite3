@@ -15,6 +15,7 @@ shipStatus = {}
 navigatingShips = []
 wealthyMapCells = []
 nextWealthyCellToAssign = 0
+endGame = False
 
 
 def findWealthyMapCells():  # populate wealthy cells list
@@ -71,7 +72,7 @@ def isShipInspired(ship): # check if ship is inspired
     return False
 
 def evaluateBestMoveForShip(ship):
-    global nextWealthyCellToAssign
+    global nextWealthyCellToAssign, endGame
     if ship.id not in shipStatus:
         shipStatus[ship.id] = {}
         shipStatus[ship.id]["movement"] = "exploring"
@@ -90,7 +91,8 @@ def evaluateBestMoveForShip(ship):
     turnsLeft = constants.MAX_TURNS - game.turn_number
     logging.info(f"Distance from shipyard: {distanceFromShipyard}")
     logging.info(f"Turns left: {turnsLeft}")
-    if shipStatus[ship.id]["movement"] == "ending" or distanceFromShipyard + 2 > turnsLeft:
+    if endGame or shipStatus[ship.id]["movement"] == "ending" or distanceFromShipyard + 2 > turnsLeft:
+        endGame = True
         logging.info(f"End game for {ship.id}")
         shipStatus[ship.id]["movement"] = "ending"
         if ship.position != me.shipyard.position:
