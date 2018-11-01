@@ -142,7 +142,7 @@ logging.info(f"Wealthy Map Cells Prioritized: {wealthyMapCells}")
 
 
 # Actual Game
-game.ready("Direction Eval Bot")
+game.ready("Experiment One Bot")
 logging.info("Reach")
 
 logging.info("Successfully created bot! My Player ID is {}.".format(game.my_id))
@@ -153,7 +153,7 @@ while True:
     me = game.me
     game_map = game.game_map
 
-    if game.turn_number > 50 and game.turn_number % 10 == 0:
+    if game.turn_number > (constants.MAX_TURNS / 9) and game.turn_number % 10 == 0:
         logging.info(f"Finding wealthy cells with at least {haliteNeededToSearch * 2} halite.")
         tempWealthyMapCells = game_map.getWealthyCells(
             haliteNeededToSearch * 2, me.shipyard.position)
