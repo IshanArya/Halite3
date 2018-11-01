@@ -73,6 +73,8 @@ class GameMap:
     def __init__(self, cells, width, height):
         self.width = width
         self.height = height
+        self.totalHaliteAmount = 0
+        self.averageHaliteAmount = 0
         self._cells = cells
 
     def __getitem__(self, location):
@@ -218,7 +220,14 @@ class GameMap:
         # subtract ship.position to just get movement
         return (bestCell - ship.position) if bestCell else bestCell
     
-    def getWealthyCells(self, wealthyMinimum):
+    def getWealthyCells(self, wealthyMinimum, shipyardPosition):
+        """
+        Return ordered list of wealthy cells by distance away from shipyard
+
+        :param wealthyMinimum: halite needed to be in list
+        :param shipyardPosition: position of shipyard
+        :return: ordered list of wealthy cells
+        """
         wealthyMapCells = []
         for i in range(self.width):
             for j in range(self.height):
@@ -226,7 +235,7 @@ class GameMap:
                 if self[currentPosition].halite_amount > wealthyMinimum and not self[currentPosition].has_structure:
                     wealthyMapCells.append(currentPosition)
         # logging.info(f"All wealthy cells: {wealthyMapCells}")
-        return wealthyMapCells
+        return sorted(wealthyMapCells, key = lambda wealthyCell: -((self.calculate_distance(shipyardPosition, wealthyCell)) / self.width) + (self[wealthyCell].halite_amount / constants.MAX_HALITE))
 
     @staticmethod
     def _generate():
@@ -250,10 +259,16 @@ class GameMap:
         """
         # Mark cells as safe for navigation (will re-mark unsafe cells
         # later)
+        totalHaliteInMap = 0
         for y in range(self.height):
             for x in range(self.width):
-                self[Position(x, y)].ship = None
-                self[Position(x, y)].booked = False
+                currentPosition = Position(x, y)
+                self[currentPosition].ship = None
+                self[currentPosition].booked = False
+                totalHaliteInMap += self[currentPosition].halite_amount
+        self.totalHalite = totalHaliteInMap
+        self.averageHaliteAmount = totalHaliteInMap / (self.height * self.width)
+
 
         for _ in range(int(read_input())):
             cell_x, cell_y, cell_energy = map(int, read_input().split())

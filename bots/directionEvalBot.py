@@ -4,6 +4,7 @@ from hlt.positionals import Position, Direction
 import logging
 
 game = hlt.Game()
+# game.update_frame()
 me = game.me
 game_map = game.game_map
 
@@ -123,7 +124,7 @@ def evaluateBestMoveForShip(ship):
         logging.info(f"Ship {ship.id} will be moving to adjacent square: {bestCell + ship.position}")
         return ship.move(Direction.convert((bestCell.x, bestCell.y)))
 
-    if game_map[shipStatus[ship.id]["wealthCellObjective"]].halite_amount < haliteNeededToSearch * 2:
+    if game_map[shipStatus[ship.id]["wealthCellObjective"]].halite_amount < game_map.averageHaliteAmount:
         shipStatus[ship.id]["wealthCellObjective"] = wealthyMapCells[(nextWealthyCellToAssign) % len(wealthyMapCells)]
         nextWealthyCellToAssign += 1
     navigatingShips.append(ship)
@@ -133,7 +134,8 @@ def evaluateBestMoveForShip(ship):
     
     
 # Pregame
-findWealthyMapCells()
+# findWealthyMapCells()
+wealthyMapCells = game_map.getWealthyCells(200, me.shipyard.position)
 
 
 # Actual Game
@@ -148,18 +150,21 @@ while True:
     me = game.me
     game_map = game.game_map
 
-    if game.turn_number > 50 and game.turn_number % 10 == 0:
-        tempWealthyMapCells = game_map.getWealthyCells(haliteNeededToSearch * 2)
+    if game.turn_number % 10 == 0:
+        tempWealthyMapCells = game_map.getWealthyCells(
+            haliteNeededToSearch * 2, me.shipyard.position)
         if tempWealthyMapCells:
             wealthyMapCells = tempWealthyMapCells
             nextWealthyCellToAssign = 0
 
     command_queue = []
 
-    if haliteNeededToSearch >= 20:
-        haliteNeededToSearch -= 0.5
-    elif haliteNeededToSearch >= 3:
+    if haliteNeededToSearch >= 50:
+        haliteNeededToSearch -= 0.3
+        logging.info(f"Average amount of halite in map: {game_map.averageHaliteAmount}")
+    elif haliteNeededToSearch >= 10:
         haliteNeededToSearch -= 0.1
+    # haliteNeededToSearch = game_map.averageHaliteAmount / 4
 
     for ship in me.get_ships():
         logging.info("For Loop has begun")
