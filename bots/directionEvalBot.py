@@ -78,6 +78,13 @@ def evaluateBestMoveForShip(ship):
         shipStatus[ship.id]["wealthCellObjective"] = wealthyMapCells[(nextWealthyCellToAssign) % len(wealthyMapCells)]
         nextWealthyCellToAssign += 1
     
+    # BIG EDGE CASE: Check if ship has enough halite to move!!
+    if ship.halite_amount < (1/constants.MOVE_COST_RATIO) * game_map[ship.position].halite_amount:
+        logging.info(f"Ship {ship.id} does not have enough halite to move.")
+        game_map[ship.position].booked = True
+        return ship.stay_still()
+
+
     distanceFromShipyard = game_map.calculate_distance(ship.position, me.shipyard.position)
     turnsLeft = constants.MAX_TURNS - game.turn_number
     logging.info(f"Distance from shipyard: {distanceFromShipyard}")
@@ -100,23 +107,20 @@ def evaluateBestMoveForShip(ship):
         if ship.position == me.shipyard.position:
             shipStatus[ship.id]["movement"] = "exploring"
         else:
-            shipStatus[ship.id]["intention"] = "move"
             logging.info(f"Ship {ship.id} will be returning.")
             navigatingShips.append(ship)
             return None
     
     # All commands if ship is exploring
     if game_map[ship.position].halite_amount >= haliteNeededToSearch:
-        shipStatus[ship.id]["intention"] = "stay"
         game_map[ship.position].booked = True
         logging.info(f"Ship {ship.id} will be staying.")
         return ship.stay_still()
 
-    shipStatus[ship.id]["intention"] = "move"
     bestCell = game_map.getMostWealthyAdjacentCell(ship)
     if bestCell and game_map[bestCell + ship.position].halite_amount >= haliteNeededToSearch:
         game_map[bestCell + ship.position].booked = True
-        logging.info(f"Ship {ship.id} will be moving to adjacent square.")
+        logging.info(f"Ship {ship.id} will be moving to adjacent square: {bestCell + ship.position}")
         return ship.move(Direction.convert((bestCell.x, bestCell.y)))
 
     if game_map[shipStatus[ship.id]["wealthCellObjective"]].halite_amount < haliteNeededToSearch * 2:
@@ -174,6 +178,7 @@ while True:
             ship, 
             shipStatus[ship.id]["wealthCellObjective"] if shipStatus[ship.id]["movement"] == "exploring" else me.shipyard.position)
         if direction:
+            logging.info(f"Ship {ship.id} is going to be moving in direction: {direction}")
             command_queue.append(ship.move(direction))
         else:
             stillNavigatingShips.append(ship)
@@ -183,11 +188,12 @@ while True:
             ship,
             shipStatus[ship.id]["wealthCellObjective"] if shipStatus[ship.id]["movement"] == "exploring" else me.shipyard.position,
             True)
+        logging.info(f"Ship {ship.id} is going to be moving in direction: {direction}")
         command_queue.append(ship.move(direction))
     
     navigatingShips = []
 
-    if game.turn_number < constants.MAX_TURNS / 3 and me.halite_amount >= constants.SHIP_COST and not game_map[me.shipyard].is_occupied:
+    if game.turn_number < constants.MAX_TURNS / 3 and me.halite_amount >= constants.SHIP_COST and not game_map[me.shipyard].is_occupied and not game_map[me.shipyard].booked:
         command_queue.append(game.me.shipyard.spawn())
 
     game.end_turn(command_queue)

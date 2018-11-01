@@ -1,6 +1,6 @@
 import hlt
 from hlt import constants
-from hlt.positionals import Position
+from hlt.positionals import Position, Direction
 import logging
 
 game = hlt.Game()
@@ -29,12 +29,20 @@ while True:
         logging.info(f"Have {len(me.get_ships())}  ships")
         ships = me.get_ships()
         enemyPosition = Position(7, 5)
-        position0 = Position(11, 4)
+        position0 = Position(7, 7)
         position1 = Position(7, 6)
-        ship0Move = game_map.naive_navigate(ships[0], position0)
-        command_queue.append(ships[0].move(ship0Move))
-        ship1Move = game_map.naive_navigate(ships[1], position1)
-        command_queue.append(ships[1].move(ship1Move))
+        if ships[0].position == position1 and ships[1].position == position0:
+            logging.info("Moving to position!")
+            command_queue.append(ships[0].move(Direction.South))
+            command_queue.append(ships[1].move(Direction.East))
+        else:
+            logging.info("Still naive navigating...")
+            logging.info(f"Ship {ships[0].id} (0) @ {ships[0].position}.")
+            logging.info(f"Ship {ships[1].id} (1) @ {ships[1].position}.")
+            ship0Move = game_map.naive_navigate(ships[0], position0)
+            command_queue.append(ships[0].move(ship0Move))
+            ship1Move = game_map.naive_navigate(ships[1], position1)
+            command_queue.append(ships[1].move(ship1Move))
         if game_map[position0].is_occupied:
             logging.info(f"Distance from friendly ship to enemy ship: {game_map.calculate_distance(enemyPosition, position0)}")
             logging.info(f"Inspire radius: {constants.INSPIRATION_RADIUS}")
