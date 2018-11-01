@@ -136,6 +136,7 @@ def evaluateBestMoveForShip(ship):
 # Pregame
 # findWealthyMapCells()
 wealthyMapCells = game_map.getWealthyCells(200, me.shipyard.position)
+logging.info(f"Wealthy Map Cells Prioritized: {wealthyMapCells}")
 
 
 # Actual Game
@@ -150,11 +151,13 @@ while True:
     me = game.me
     game_map = game.game_map
 
-    if game.turn_number % 10 == 0:
+    if game.turn_number > 50 and game.turn_number % 10 == 0:
+        logging.info(f"Finding wealthy cells with at least {haliteNeededToSearch * 2} halite.")
         tempWealthyMapCells = game_map.getWealthyCells(
             haliteNeededToSearch * 2, me.shipyard.position)
         if tempWealthyMapCells:
             wealthyMapCells = tempWealthyMapCells
+            logging.info(f"Wealthy Map Cells Prioritized: {wealthyMapCells}")
             nextWealthyCellToAssign = 0
 
     command_queue = []

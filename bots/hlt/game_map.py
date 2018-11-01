@@ -235,7 +235,7 @@ class GameMap:
                 if self[currentPosition].halite_amount > wealthyMinimum and not self[currentPosition].has_structure:
                     wealthyMapCells.append(currentPosition)
         # logging.info(f"All wealthy cells: {wealthyMapCells}")
-        return sorted(wealthyMapCells, key = lambda wealthyCell: -((self.calculate_distance(shipyardPosition, wealthyCell)) / self.width) + (self[wealthyCell].halite_amount / constants.MAX_HALITE))
+        return sorted(wealthyMapCells, key = lambda wealthyCell: ((self.calculate_distance(shipyardPosition, wealthyCell)) / self.width) - (self[wealthyCell].halite_amount / constants.MAX_HALITE))
 
     @staticmethod
     def _generate():
