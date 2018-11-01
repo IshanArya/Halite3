@@ -142,7 +142,7 @@ logging.info(f"Wealthy Map Cells Prioritized: {wealthyMapCells}")
 
 
 # Actual Game
-game.ready("Direction Eval Bot")
+game.ready("Kingsmen V3 Bot")
 logging.info("Reach")
 
 logging.info("Successfully created bot! My Player ID is {}.".format(game.my_id))
