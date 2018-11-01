@@ -153,7 +153,7 @@ while True:
     me = game.me
     game_map = game.game_map
 
-    if game.turn_number > 50 and game.turn_number % 10 == 0:
+    if game.turn_number > (constants.MAX_TURNS / 9) and game.turn_number % 10 == 0:
         logging.info(f"Finding wealthy cells with at least {haliteNeededToSearch * 2} halite.")
         tempWealthyMapCells = game_map.getWealthyCells(
             haliteNeededToSearch * 2, me.shipyard.position)
