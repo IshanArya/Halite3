@@ -132,18 +132,15 @@ while True:
             if (ship.position in below_average_cell_positions or ship.position == me.shipyard.position):
                 minimum_value = min(above_average_final_normalized_score)
                 for i in range(0,len(above_average_final_normalized_score)):
-                    if ship.halite_amount > 10*distances_to_above_average[i][0]: #this is just a ballpark i need to do that 10% calculation thing
-                        if above_average_final_normalized_score[i] == minimum_value:
-                            naive_direction = game_map.naive_navigate(ship,halite_amount_at_cells_above_average[i][0])
-                            command_queue.append(ship.move(naive_direction))
-                            break
-                else:
-                    command_queue.append(ship.stay_still())
+                    if above_average_final_normalized_score[i] == minimum_value:
+                        intelligent_direction = game_map.intelligent_navigate(ship,halite_amount_at_cells_above_average[i][0])
+                        command_queue.append(ship.move(intelligent_direction))
+                        break
             else:
-                command_queue.append(ship.stay_still())
+                command_queue.append(ship.stay_still()) #if the ship is not in a below average cell position and the position not equal to a shipyard position
         else:
-            naive_direction = game_map.naive_navigate(ship,me.shipyard.position)
-            command_queue.append(ship.move(naive_direction))
+            intelligent_direction = game_map.intelligent_navigate(ship,me.shipyard.position)
+            command_queue.append(ship.move(intelligent_direction))
 
         ''' # I attempted to move the ship to location where the score i derived was less than the enemy normalized score
         list_of_lists_of_enemy = []
