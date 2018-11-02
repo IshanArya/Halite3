@@ -73,9 +73,16 @@ class GameMap:
     def __init__(self, cells, width, height):
         self.width = width
         self.height = height
-        self.totalHaliteAmount = 0
-        self.averageHaliteAmount = 0
         self._cells = cells
+        totalHaliteInMap = 0
+        for y in range(self.height):
+            for x in range(self.width):
+                currentPosition = Position(x, y)
+                self[currentPosition].ship = None
+                self[currentPosition].booked = False
+                totalHaliteInMap += self[currentPosition].halite_amount
+        self.totalHalite = totalHaliteInMap
+        self.averageHaliteAmount = totalHaliteInMap / (self.height * self.width)
 
     def __getitem__(self, location):
         """

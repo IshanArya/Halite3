@@ -9,3 +9,9 @@
 ./halite --replay-directory replays/ -vvv --width 32 --height 32 "python3 bots/testMyBot.py" "python3 bots/testMyBot.py"
 
 ./halite --replay-directory replays/ -vvv --width 32 --height 32 "python3 bots/testMyBot.py" "python3 bots/svmAttemptBot.py"
+
+
+#Ishan's Tests#
+./halite --replay-directory replays/ -vvv -s 1541138049 --width 64 --height 64 "python3 bots/oldTestMyBot.py" "python3 bots/kingsmenv3Bot.py" "python3 bots/testMyBot.py" "python3 bots/experimentOneBot.py"
+
+./halite --replay-directory replays/ -vvv --width 40 --height 40 "python3 bots/kingsmenv3Bot.py" "python3 bots/experimentOneBot.py"

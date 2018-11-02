@@ -9,7 +9,7 @@ me = game.me
 game_map = game.game_map
 
 maxNumberOfShips = 10
-shipSpawnCounter = 0
+spawnTurnDivider = 1.6
 haliteNeededToSearch = 100
 shipStatus = {}
 navigatingShips = []
@@ -17,23 +17,6 @@ wealthyMapCells = []
 nextWealthyCellToAssign = 0
 endGame = False
 
-
-def findWealthyMapCells():  # populate wealthy cells list
-    shipyardPosition = me.shipyard.position
-    logging.info(f"GameMap width: {game_map.width}")
-    scanStartIndex = 0
-    scanEndIndex = game_map.width
-    if shipyardPosition.x < (game_map.width / 2):
-        scanEndIndex /= 2
-    else:
-        scanStartIndex = game_map.width / 2
-    logging.info(f"Start Index: {scanStartIndex}; End Index: {scanEndIndex}")
-    for i in range(int(scanStartIndex), int(scanEndIndex)):
-        for j in range(game_map.height):
-            currentPosition = Position(i, j)
-            if game_map[currentPosition].halite_amount > 400 and not game_map[currentPosition].has_structure:
-                wealthyMapCells.append(currentPosition)
-    logging.info(f"All wealthy cells: {wealthyMapCells}")
 
 
 def getClosestShipyardAdjacentCell(ship):
@@ -136,9 +119,13 @@ def evaluateBestMoveForShip(ship):
     
     
 # Pregame
-# findWealthyMapCells()
 wealthyMapCells = game_map.getWealthyCells(200, me.shipyard.position)
-logging.info(f"Wealthy Map Cells Prioritized: {wealthyMapCells}")
+if game_map.width == 64:
+    spawnTurnDivider = 1.8
+elif game_map.width > 45:
+    spawnTurnDivider = 1.7
+logging.info(f"Spawn Turn Divider is {spawnTurnDivider}")
+logging.info(f"Total Halite is {game_map.totalHalite}")
 
 
 # Actual Game
@@ -153,7 +140,7 @@ while True:
     me = game.me
     game_map = game.game_map
 
-    if game.turn_number > (constants.MAX_TURNS / 9) and game.turn_number % 10 == 0:
+    if game.turn_number > 50 and game.turn_number % 10 == 0:
         logging.info(f"Finding wealthy cells with at least {haliteNeededToSearch * 2} halite.")
         tempWealthyMapCells = game_map.getWealthyCells(
             haliteNeededToSearch * 2, me.shipyard.position)
@@ -203,7 +190,12 @@ while True:
     
     navigatingShips = []
 
-    if game.turn_number < constants.MAX_TURNS / 3 and me.halite_amount >= constants.SHIP_COST and not game_map[me.shipyard].is_occupied and not game_map[me.shipyard].booked:
+    if game.turn_number < constants.MAX_TURNS / spawnTurnDivider and me.halite_amount >= constants.SHIP_COST and not game_map[me.shipyard].is_occupied and not game_map[me.shipyard].booked:
+        #1.81 -> 64
+        #1.7 -> 56
+        #1.7 -> 48
+        #1.6 -> 40
+        #1.6 -> 32
         command_queue.append(game.me.shipyard.spawn())
 
     game.end_turn(command_queue)
