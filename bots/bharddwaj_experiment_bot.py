@@ -149,9 +149,11 @@ while True:
                 else: #if not enough halite to move
                     logging.info("Ship is staying still because it cannot move")
                     command_queue.append(ship.stay_still())
+                    game_map[ship.position].booked = True
             elif ship.position not in below_average_cell_positions:
                 logging.info("Ship is in an above average halite cell so it is collecting halite")
                 command_queue.append(ship.stay_still())
+                game_map[ship.position].booked = True
 
 
     if game.turn_number <= 200 and me.halite_amount >= constants.SHIP_COST and not game_map[me.shipyard].is_occupied:
