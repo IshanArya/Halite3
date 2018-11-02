@@ -104,17 +104,17 @@ while True:
         if ship.halite_amount > 900:
             ship_is_full_counter = 1
         if ship_is_full_counter > 0 and not ship.position == me.shipyard.position:
-            intelligent_direction = game_map.naive_navigate(ship, me.shipyard.position)
-            command_queue.append(ship.move(intelligent_direction))
+            naive_direction = game_map.naive_navigate(ship, me.shipyard.position)
+            command_queue.append(ship.move(naive_direction))
             #this command alone apparently doesn't allow the ship to go into the shipyard
-            logging.info(f"Ship is full and command_queue has appended the {intelligent_direction}")
+            logging.info(f"Ship is full and command_queue has appended the {naive_direction}")
             ship_is_full_counter = 0
         else:
             logging.info("entered the else statement")
             below_average_cell_positions = []
             for i in range(0,len(halite_amount_at_cells_below_average)):
                 below_average_cell_positions.append(halite_amount_at_cells_below_average[i][0])
-            if ship.position in below_average_cell_positions:
+            if ship.position in below_average_cell_positions or ship.position == me.shipyard.position:
                 if (1/(constants.MOVE_COST_RATIO))*game_map[ship.position].halite_amount <= ship.halite_amount or ship.position == me.shipyard.position: #did this as an exception if the ship is in the shipyard
                     minimum_value = distances_and_positions_above_average[0][0]
                     position_to_travel = distances_and_positions_above_average[0][1]
@@ -122,9 +122,9 @@ while True:
                         if minimum_value > distances_and_positions_above_average[i][0]:
                             minimum_value = distances_and_positions_above_average[i][0]
                             position_to_travel =  distances_and_positions_above_average[i][1]
-                    intelligent_direction = game_map.intelligent_navigate(ship,position_to_travel)
+                    naive_direction = game_map.naive_navigate(ship,position_to_travel)
                     logging.info("Ship is moving in the intelligent direction")
-                    command_queue.append(ship.move(intelligent_direction))
+                    command_queue.append(ship.move(naive_direction))
                 else: #if not enough halite to move
                     logging.info("Ship is staying still because it cannot move")
                     command_queue.append(ship.stay_still())
