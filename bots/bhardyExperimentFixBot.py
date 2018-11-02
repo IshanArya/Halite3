@@ -1,4 +1,3 @@
-# import sklearn
 import numpy as np
 import hlt
 from hlt.positionals import Position,Direction
@@ -8,7 +7,7 @@ import random
 import os
 from collections import OrderedDict
 game = hlt.Game()
-game.ready("bharddwaj-experiment-bot")
+game.ready("Bhardy Bot")
 logging.info("bharddwaj-experiment-bot")
 width = game.game_map.width
 height = game.game_map.height
@@ -69,24 +68,6 @@ while True:
     #starter python code lmao
     for ship in me.get_ships():
         logging.info("is this loop happening")
-        ##########
-        halite_amount_at_cells_below_average = [] #tuple (position, halite amount)
-        halite_amount_at_cells_above_average = [] #also if the amount is the average it will go in this list
-        halite_amount_normalized_above_average = [] #normalizing to try to weight distances more heavily
-        halite_amount_normalized_below_average = []
-        for i in range(int(-width/2),int(width/2)+1): #when i used -width and width + 1 here i didn't get an error for some reason
-            for j in range(int(-height/2),int(height/2)+1):
-                some_position = Position(i,j)
-
-                if game_map[some_position].halite_amount >= avg_halite_amount:
-                    halite_amount_at_cells_above_average.append((some_position,game_map[some_position].halite_amount))
-                    norm_value = int((game_map[some_position].halite_amount - avg_halite_amount)/std_halite_amount)
-                    halite_amount_normalized_above_average.append((some_position, norm_value))
-                else:
-                    norm_value = int((game_map[some_position].halite_amount - avg_halite_amount)/abs(std_halite_amount))
-                    halite_amount_at_cells_below_average.append((some_position,game_map[some_position].halite_amount))
-                    halite_amount_normalized_below_average.append((some_position, norm_value))
-        ############
         ship_is_full_counter = 0
         # For each of your ships, move randomly if the ship is on a low halite location or the ship is full.
         #   Else, collect halite.
@@ -122,38 +103,35 @@ while True:
         if ship.halite_amount > 900:
             ship_is_full_counter = 1
         if ship_is_full_counter > 0 and not ship.position == me.shipyard.position:
-            naive_direction = game_map.intelligent_navigate(ship, me.shipyard.position,definite = True)
+            naive_direction = game_map.intelligent_navigate(ship, me.shipyard.position,True)
             command_queue.append(ship.move(naive_direction))
             #this command alone apparently doesn't allow the ship to go into the shipyard
             logging.info(f"Ship is full and command_queue has appended the {naive_direction}")
             ship_is_full_counter = 0
         else:
             logging.info("entered the else statement")
-
             below_average_cell_positions = []
             for i in range(0,len(halite_amount_at_cells_below_average)):
                 below_average_cell_positions.append(halite_amount_at_cells_below_average[i][0])
-
-            logging.info(f"Number of Below Average Halite Cells: {len(below_average_cell_positions)}")
             if ship.position in below_average_cell_positions or ship.position == me.shipyard.position:
-                if (1/(constants.MOVE_COST_RATIO))*game_map[ship.position].halite_amount <= ship.halite_amount: #did this as an exception if the ship is in the shipyard
+                if (1/(constants.MOVE_COST_RATIO))*game_map[ship.position].halite_amount <= ship.halite_amount or ship.position == me.shipyard.position: #did this as an exception if the ship is in the shipyard
                     minimum_value = distances_and_positions_above_average[0][0]
                     position_to_travel = distances_and_positions_above_average[0][1]
                     for i in range(0, len(distances_and_positions_above_average)):
                         if minimum_value > distances_and_positions_above_average[i][0]:
                             minimum_value = distances_and_positions_above_average[i][0]
                             position_to_travel =  distances_and_positions_above_average[i][1]
-                    naive_direction = game_map.intelligent_navigate(ship,position_to_travel,definite = True)
-                    logging.info("Ship is moving in the intelligent direction")
+                    naive_direction = game_map.intelligent_navigate(ship,position_to_travel,True)
+                    logging.info(f"Ship is moving in the intelligent direction with {position_to_travel}")
+                    logging.info(
+                        f"Direction: {naive_direction}")
                     command_queue.append(ship.move(naive_direction))
                 else: #if not enough halite to move
                     logging.info("Ship is staying still because it cannot move")
                     command_queue.append(ship.stay_still())
-                    game_map[ship.position].booked = True
-            elif ship.position not in below_average_cell_positions:
+            else:
                 logging.info("Ship is in an above average halite cell so it is collecting halite")
                 command_queue.append(ship.stay_still())
-                game_map[ship.position].booked = True
 
 
     if game.turn_number <= 200 and me.halite_amount >= constants.SHIP_COST and not game_map[me.shipyard].is_occupied:

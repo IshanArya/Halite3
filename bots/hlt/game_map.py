@@ -184,7 +184,7 @@ class GameMap:
         :param ship: The ship to move.
         :param destination: Ending position
         :param definite: whether to hestitate about booking or not
-        :return: boolean definite, A direction.
+        :return: A direction.
         """
 
         for direction in self.get_unsafe_moves(ship.position, destination):

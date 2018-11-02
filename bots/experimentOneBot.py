@@ -173,7 +173,8 @@ while True:
         logging.info(f"Still trying to find {ship.id} a move.")
         direction = game_map.intelligent_navigate(
             ship, 
-            shipStatus[ship.id]["wealthCellObjective"] if shipStatus[ship.id]["movement"] == "exploring" else me.shipyard.position)
+            shipStatus[ship.id]["wealthCellObjective"] if shipStatus[ship.id]["movement"] == "exploring" else me.shipyard.position,
+            True)
         if direction:
             logging.info(f"Ship {ship.id} is going to be moving in direction: {direction}")
             command_queue.append(ship.move(direction))
@@ -190,12 +191,13 @@ while True:
     
     navigatingShips = []
 
-    if game.turn_number < constants.MAX_TURNS / spawnTurnDivider and me.halite_amount >= constants.SHIP_COST and not game_map[me.shipyard].is_occupied and not game_map[me.shipyard].booked:
+    if game.turn_number < constants.MAX_TURNS / 3 and me.halite_amount >= constants.SHIP_COST and not game_map[me.shipyard].booked:
         #1.81 -> 64
         #1.7 -> 56
         #1.7 -> 48
         #1.6 -> 40
         #1.6 -> 32
+        game_map[me.shipyard.position].booked = True;
         command_queue.append(game.me.shipyard.spawn())
 
     game.end_turn(command_queue)
