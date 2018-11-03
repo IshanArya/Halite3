@@ -175,7 +175,7 @@ class GameMap:
 
         return Direction.Still
 
-    def intelligent_navigate(self, ship, destination, definite = False):
+    def intelligent_navigate(self, ship, destination):
         """
         Returns a singular safe move towards the destination.
         This works in conjunction with a ship tracker that tracks whether or not ships already have a move
@@ -193,26 +193,23 @@ class GameMap:
                 self[target_pos].booked = True
                 return direction
 
-        if definite:
-            for direction in self.get_unsafe_moves(ship.position, destination):
-                target_pos = ship.position.directional_offset(direction)
-                if not self[target_pos].booked:
-                    self[target_pos].booked = True
-                    return direction
+        for direction in self.get_unsafe_moves(ship.position, destination):
+            target_pos = ship.position.directional_offset(direction)
+            if not self[target_pos].booked:
+                self[target_pos].booked = True
+                return direction
 
-        if definite:
-            if not self[ship.position].booked:
-                self[ship.position].booked = True
-                return Direction.Still
-            else:
-                for direction in Direction.get_all_cardinals():
-                    target_pos = ship.position.directional_offset(direction)
-                    if not self[target_pos].booked:
-                        self[target_pos].booked = True
-                        return direction
-                self[ship.position].booked = True
-                return Direction.Still
-        return None
+        if not self[ship.position].booked:
+            self[ship.position].booked = True
+            return Direction.Still
+
+        for direction in Direction.get_all_cardinals():
+            target_pos = ship.position.directional_offset(direction)
+            if not self[target_pos].booked:
+                self[target_pos].booked = True
+                return direction
+        self[ship.position].booked = True
+        return Direction.Still
     
     def getMostWealthyAdjacentCell(self, ship):
         maxHalite = 0
