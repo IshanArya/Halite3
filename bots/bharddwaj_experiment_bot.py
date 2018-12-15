@@ -45,6 +45,7 @@ while True:
         ship_specific_list = [] #this info is specific to positions in a radius around the ship
         logging.info("Looping among friendly ships has begun")
         counter = 0 #see how many positions i get from the loop
+        counter2 = 0 #this is a secondary counter for counting the if statements
         for i in range(0,6):
             for j in range(0,6):
                 position_relative_to_ship_one = Position(i,j) + ship.position
@@ -55,7 +56,8 @@ while True:
                 counter+=1
                 position_relative_to_ship_four = Position(-i,-j) + ship.position
                 counter+=1
-                if not i == 0 and j == 0:
+                if not (i == 0 and j == 0):
+                    counter2+= 1
                     list_of_ship_vision.append(position_relative_to_ship_one)
                     list_of_ship_vision.append(position_relative_to_ship_two)
                     list_of_ship_vision.append(position_relative_to_ship_three)
@@ -95,10 +97,12 @@ while True:
                         if not temp_list4 == []:
                             ship_specific_list.append(temp_list4)
                 else:
-                    list_of_ship_vision.append(ship.position)
-                    some_list = []
-                    some_list.append((ship.position,game_map[ship.position].halite_amount))
-                    ship_specific_list.append(some_list)
+                    counter2 += 2
+                    if not ship.position in list_of_ship_vision: #adding this decreased the length from 51 to 25 for some reason
+                        list_of_ship_vision.append(ship.position)
+                        some_list = []
+                        some_list.append((ship.position,game_map[ship.position].halite_amount))
+                        ship_specific_list.append(some_list)
         #delete this loop later
         num_positions_in_dict = 0
         not_in_dict = []
@@ -106,10 +110,10 @@ while True:
             for j in halite_amount_based_dict:
                 if i == halite_amount_based_dict[j][0]:
                     num_positions_in_dict  += 1
-                    break
+
                 else:
                     not_in_dict.append(halite_amount_based_dict[j][0])
-                    break
+
 
         logging.info(f'Length of Dictionary: {len(halite_amount_based_dict)}')
         logging.info(f"Width: {width}")
@@ -117,6 +121,7 @@ while True:
         logging.info(f"iterations_for_below: {iterations_for_below} ")
         logging.info(f"Ship Specific List: {ship_specific_list}")
         logging.info(f"counter: {counter}")
+        logging.info(f"counter2: {counter2}")
         logging.info(f"Length of the list: {len(ship_specific_list)}")
         logging.info(f"Length of Ship Vision: {len(list_of_ship_vision)} ")
         logging.info(f"Num Positions: {num_positions_in_dict}")
