@@ -97,7 +97,7 @@ while True:
                         if not temp_list4 == []:
                             ship_specific_list.append(temp_list4)
                 else:
-                    counter2 += 2
+                    counter2 += 1
                     if not ship.position in list_of_ship_vision: #adding this decreased the length from 51 to 25 for some reason
                         list_of_ship_vision.append(ship.position)
                         some_list = []
@@ -124,6 +124,7 @@ while True:
         logging.info(f"counter2: {counter2}")
         logging.info(f"Length of the list: {len(ship_specific_list)}")
         logging.info(f"Length of Ship Vision: {len(list_of_ship_vision)} ")
+        logging.info(f"Length of Halite Dict: {len(halite_amount_based_dict)} ")
         logging.info(f"Num Positions: {num_positions_in_dict}")
         logging.info(f"length of not in dict {len(not_in_dict)}")
     if game.turn_number <= 200 and me.halite_amount >= constants.SHIP_COST and not game_map[me.shipyard].is_occupied:
