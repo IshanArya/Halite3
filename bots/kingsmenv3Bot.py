@@ -2,7 +2,7 @@ import hlt
 from hlt import constants
 from hlt.positionals import Position, Direction
 import logging
-
+import secrets
 game = hlt.Game()
 # game.update_frame()
 me = game.me
@@ -28,7 +28,7 @@ def getClosestShipyardAdjacentCell(ship):
         if currentDistance < shortestDistance:
             closestCell = target_pos
             shortestDistance = currentDistance
-    
+
     return closestCell
 
 def isShipInspired(ship): # check if ship is inspired
@@ -62,7 +62,7 @@ def evaluateBestMoveForShip(ship):
         logging.info(f"shipStatus Object: {shipStatus}")
         shipStatus[ship.id]["wealthCellObjective"] = wealthyMapCells[(nextWealthyCellToAssign) % len(wealthyMapCells)]
         nextWealthyCellToAssign += 1
-    
+
     # BIG EDGE CASE: Check if ship has enough halite to move!!
     if ship.halite_amount < (1/constants.MOVE_COST_RATIO) * game_map[ship.position].halite_amount:
         logging.info(f"Ship {ship.id} does not have enough halite to move.")
@@ -84,8 +84,8 @@ def evaluateBestMoveForShip(ship):
                 return ship.move(game_map.get_unsafe_moves(ship.position, me.shipyard.position)[0])
             navigatingShips.append(ship)
         return None
-            
-     
+
+
     if ship.halite_amount >= constants.MAX_HALITE:
         shipStatus[ship.id]["movement"] = "returning"
 
@@ -96,7 +96,7 @@ def evaluateBestMoveForShip(ship):
             logging.info(f"Ship {ship.id} will be returning.")
             navigatingShips.append(ship)
             return None
-    
+
     # All commands if ship is exploring
     if game_map[ship.position].halite_amount >= haliteNeededToSearch:
         game_map[ship.position].booked = True
@@ -116,8 +116,8 @@ def evaluateBestMoveForShip(ship):
     return None
 
 
-    
-    
+
+
 # Pregame
 wealthyMapCells = game_map.getWealthyCells(200, me.shipyard.position)
 if game_map.width == 64:
@@ -166,31 +166,33 @@ while True:
         if bestMoveForShip:
             logging.info(f"Best move for ship {ship.id} is {bestMoveForShip}")
             command_queue.append(bestMoveForShip)
-    
+
     logging.info(f"Navigating ships: {navigatingShips}")
     for ship in navigatingShips:
         logging.info(f"Still trying to find {ship.id} a move.")
         direction = game_map.intelligent_navigate(
-            ship, 
+            ship,
             shipStatus[ship.id]["wealthCellObjective"] if shipStatus[ship.id]["movement"] == "exploring" else me.shipyard.position)
         logging.info(f"Ship {ship.id} is going to be moving in direction: {direction}")
         command_queue.append(ship.move(direction))
-    
+
     navigatingShips = []
 
-    if game.turn_number < constants.MAX_TURNS / 3 and me.halite_amount >= constants.SHIP_COST and not game_map[me.shipyard].booked:
+    if me.halite_amount >= constants.SHIP_COST and not game_map[me.shipyard].booked:
+        a_choice = [0,1]
+        choice = secrets.choice(range(len(a_choice)))
         #1.81 -> 64
         #1.7 -> 56
         #1.7 -> 48
         #1.6 -> 40
         #1.6 -> 32
-        game_map[me.shipyard.position].booked = True;
-        command_queue.append(game.me.shipyard.spawn())
+        if choice = 0:
+            game_map[me.shipyard.position].booked = True
+            command_queue.append(game.me.shipyard.spawn())
+        else:
+            logging.info("did not spawn a ship")
 
     game.end_turn(command_queue)
 
 
 # Enclosed methods
-
-
-
