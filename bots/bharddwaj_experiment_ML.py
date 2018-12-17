@@ -70,7 +70,7 @@ while True:
         command_queue.append(ship.move(direction_order[choice]))
     if game.turn_number == TOTAL_TURNS:
         if me.halite_amount > SAVE_THRESHHOLD:
-            np.save(f"training_data/{me.halite_amount}-{int(time.time()*1000)}.npy",training_data)
+            np.save(f"‎⁨Macintosh HD⁩/Users⁩/bharddwajvemulapalli⁩/⁨Documents/Halite_project⁩/Halite3_Python3_MacOS⁩/Halite3⁩/mlstuff⁩/training_data/{me.halite_amount}-{int(time.time()*1000)}.npy",training_data)
     if len(me.get_ships()) < MAX_SHIPS :
         command_queue.append(me.shipyard.spawn())
         logging.info("Ship has just been spawned")
