@@ -178,7 +178,7 @@ while True:
     
     navigatingShips = []
 
-    if game.turn_number < constants.MAX_TURNS / 3 and me.halite_amount >= constants.SHIP_COST and not game_map[me.shipyard].booked:
+    if game.turn_number < constants.MAX_TURNS / spawnTurnDivider and me.halite_amount >= constants.SHIP_COST and not game_map[me.shipyard].booked:
         #1.81 -> 64
         #1.7 -> 56
         #1.7 -> 48

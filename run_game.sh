@@ -14,6 +14,8 @@
 #Ishan's Tests#
 ./halite --replay-directory replays/ -vvv --no-logs --width 64 --height 64 "python3 bots/oldTestMyBot.py" "python3 bots/kingsmenv3Bot.py" "python3 bots/testMyBot.py" "python3 bots/experimentOneBot.py"
 
+hlt play -r "python experimentOneBot.py" -r "python kingsmenv3Bot.py" -r "python kingsmenv3Bot.py" -r "python experimentOneBot.py" -b ../halite --output-dir ../replays
+
 ./halite --replay-directory replays/ -vvv --no-logs --width 40 --height 40 "python3 bots/kingsmenv3Bot.py" "python3 bots/experimentOneBot.py"
 ./halite --replay-directory replays/ -vvv --no-logs --width 32 --height 32 "python3 bots/bharddwaj_experiment_bot.py" "python3 bots/bharddwaj_experiment_bot.py"
 

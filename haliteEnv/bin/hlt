@@ -1,4 +1,0 @@
-#!/Users/ishanarya/GitHub/Halite3/haliteEnv/bin/python
-# EASY-INSTALL-SCRIPT: 'hlt-client==1.1.0','hlt'
-__requires__ = 'hlt-client==1.1.0'
-__import__('pkg_resources').run_script('hlt-client==1.1.0', 'hlt')

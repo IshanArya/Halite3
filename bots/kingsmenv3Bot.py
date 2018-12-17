@@ -129,7 +129,7 @@ logging.info(f"Total Halite is {game_map.totalHalite}")
 
 
 # Actual Game
-game.ready("Experiment One Bot")
+game.ready("Kingsmen V3 Bot")
 logging.info("Reach")
 
 logging.info("Successfully created bot! My Player ID is {}.".format(game.my_id))
