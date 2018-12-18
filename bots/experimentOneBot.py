@@ -62,6 +62,8 @@ def evaluateBestMoveForShip(ship):
         logging.info(f"shipStatus Object: {shipStatus}")
         shipStatus[ship.id]["wealthCellObjective"] = wealthyMapCells[(nextWealthyCellToAssign) % len(wealthyMapCells)]
         nextWealthyCellToAssign += 1
+    tempGoal = shipStatus[ship.id]["wealthCellObjective"]
+    logging.info(f"Ship {ship.id} is navigating towards: {tempGoal}")
     
     # BIG EDGE CASE: Check if ship has enough halite to move!!
     if ship.halite_amount < (1/constants.MOVE_COST_RATIO) * game_map[ship.position].halite_amount:
@@ -139,7 +141,7 @@ while True:
     game.update_frame()
     me = game.me
     game_map = game.game_map
-
+    logging.info(f"Average Halite Amount: {game_map.averageHaliteAmount}")
     if game.turn_number > 50 and game.turn_number % 10 == 0:
         logging.info(f"Finding wealthy cells with at least {haliteNeededToSearch * 2} halite.")
         tempWealthyMapCells = game_map.getWealthyCells(
@@ -148,6 +150,8 @@ while True:
             wealthyMapCells = tempWealthyMapCells
             logging.info(f"Wealthy Map Cells Prioritized: {wealthyMapCells}")
             nextWealthyCellToAssign = 0
+    else:
+        logging.info(f"Wealthy Map Cells Prioritized: {wealthyMapCells}")
 
     command_queue = []
 
@@ -178,7 +182,7 @@ while True:
     
     navigatingShips = []
 
-    if game.turn_number < constants.MAX_TURNS / spawnTurnDivider and me.halite_amount >= constants.SHIP_COST and not game_map[me.shipyard].booked:
+    if game.turn_number < constants.MAX_TURNS / 3 and me.halite_amount >= constants.SHIP_COST and not game_map[me.shipyard].booked:
         #1.81 -> 64
         #1.7 -> 56
         #1.7 -> 48
