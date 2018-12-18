@@ -2,7 +2,7 @@ import hlt
 from hlt import constants
 from hlt.positionals import Position, Direction
 import logging
-import secrets
+
 game = hlt.Game()
 # game.update_frame()
 me = game.me
@@ -129,7 +129,7 @@ logging.info(f"Total Halite is {game_map.totalHalite}")
 
 
 # Actual Game
-game.ready("Kingsmen V3 Bot")
+game.ready("Experiment One Bot")
 logging.info("Reach")
 
 logging.info("Successfully created bot! My Player ID is {}.".format(game.my_id))
@@ -167,30 +167,36 @@ while True:
             logging.info(f"Best move for ship {ship.id} is {bestMoveForShip}")
             command_queue.append(bestMoveForShip)
 
+    stillNavigatingShips = []
     logging.info(f"Navigating ships: {navigatingShips}")
     for ship in navigatingShips:
         logging.info(f"Still trying to find {ship.id} a move.")
         direction = game_map.intelligent_navigate(
             ship,
             shipStatus[ship.id]["wealthCellObjective"] if shipStatus[ship.id]["movement"] == "exploring" else me.shipyard.position)
+        if direction:
+            logging.info(f"Ship {ship.id} is going to be moving in direction: {direction}")
+            command_queue.append(ship.move(direction))
+        else:
+            stillNavigatingShips.append(ship)
+    for ship in stillNavigatingShips:
+        logging.info(f"Going to find {ship.id} a move this time.")
+        direction = game_map.intelligent_navigate(
+            ship,
+            shipStatus[ship.id]["wealthCellObjective"] if shipStatus[ship.id]["movement"] == "exploring" else me.shipyard.position,
+            True)
         logging.info(f"Ship {ship.id} is going to be moving in direction: {direction}")
         command_queue.append(ship.move(direction))
 
     navigatingShips = []
 
-    if me.halite_amount >= constants.SHIP_COST and not game_map[me.shipyard].booked:
-        a_choice = [0,1]
-        choice = secrets.choice(range(len(a_choice)))
+    if game.turn_number < constants.MAX_TURNS / spawnTurnDivider and me.halite_amount >= constants.SHIP_COST and not game_map[me.shipyard].is_occupied and not game_map[me.shipyard].booked:
         #1.81 -> 64
         #1.7 -> 56
         #1.7 -> 48
         #1.6 -> 40
         #1.6 -> 32
-        if choice = 0:
-            game_map[me.shipyard.position].booked = True
-            command_queue.append(game.me.shipyard.spawn())
-        else:
-            logging.info("did not spawn a ship")
+        command_queue.append(game.me.shipyard.spawn())
 
     game.end_turn(command_queue)
 
