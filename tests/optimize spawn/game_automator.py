@@ -46,19 +46,45 @@ def determineWinner(results):
     for player_id, stats in results["stats"].items():
         if stats["rank"] == 1:
             return player_id
+def getGameSeed(results):
+    return results["map_seed"]
+def getScore(results, player):
+    return results["stats"][str(player)]["score"]
+def getScores(results):
+    scores = []
+    for stats in results["stats"].values():
+        scores.append(stats["score"])
+    return scores
+def getDimension(results):
+    return results["map_height"]
+
+
+def formatLog(winStatus, dimension, spawnTurnDivider, totalHalite, gameSeed, playerScores):
+    log = f"{winStatus},{dimension},{spawnTurnDivider},{totalHalite},{gameSeed}"
+    for score in playerScores:
+        log = f"{log},{score}"
+    log = f"{log}\n"
+    return log
 
 def logInfo(results, loggingFile):
+    targetWinner = 0
     winner = determineWinner(results)
     print(winner);
-    if int(winner) == 0:
-        bot0Log = open("bot-0.log")
-        logLine = bot0Log.readline()
-        spawnTurnDivider = logLine[logLine.index("-(")+2:logLine.index(")-")]
-        logLine = bot0Log.readline()
-        totalHalite = logLine[logLine.index("-(")+2:logLine.index(")-")]
-        logLine = f"{spawnTurnDivider},{totalHalite}\n"
-        print(logLine)
-        loggingFile.write(logLine)
+    logFile = f"bot-{targetWinner}.log"
+    bot0Log = open(logFile)
+    logLine = bot0Log.readline()
+    spawnTurnDivider = logLine[logLine.index("-(")+2:logLine.index(")-")]
+    logLine = bot0Log.readline()
+    totalHalite = logLine[logLine.index("-(")+2:logLine.index(")-")]
+    gameSeed = getGameSeed(results)
+    dimension = getDimension(results)
+    winStatus = "LOSE"
+    if int(winner) == targetWinner:
+        winStatus = "WIN"
+    scores = getScores(results)
+    logLine = formatLog(winStatus, dimension, spawnTurnDivider, totalHalite, gameSeed, scores)
+    print(logLine)
+    loggingFile.write(logLine)
 
 
 def playGames(binary, replayDirectory, dimension, verbosity, bots, iterations=10, seed=None, compress=False, log=False):
@@ -80,6 +106,8 @@ def playGames(binary, replayDirectory, dimension, verbosity, bots, iterations=10
         commands.append("--no-compression")
     if not log:
         commands.append("--no-logs")
+    if seed:
+        commands.extend(['--seed', str(seed)])
     
     if verbosity != 0:
         commands.append("-" + ("v" * verbosity))
@@ -97,6 +125,7 @@ def playGames(binary, replayDirectory, dimension, verbosity, bots, iterations=10
     for i in range(iterations):
         print(f"GAME {i+1}:")
         matchOutput = playGame(binary, dimension, commands, bots)
+        print(matchOutput)
         results = json.loads(matchOutput)
         logInfo(results, loggingFile)
         print("========================================")
