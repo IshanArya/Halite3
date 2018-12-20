@@ -11,7 +11,7 @@ parser.add_argument("-b", "--binary", help="location of halite binary file", req
 parser.add_argument("-rd", "--replay-directory", help="directory to store replay files", dest="replayDirectory")
 parser.add_argument("-d", "--dimension", help="dimension of map", default=0, dest="dimension", type=int)
 parser.add_argument("--log", help="log errors", action="store_true")
-parser.add_argument("--compress", help="compress output files", action="store_true")
+parser.add_argument("--no-compress", help="compress output files", action="store_true", dest="noCompress")
 parser.add_argument("-v", "--verbosity", action="count", default=0, help="increase the logging verbosity level", dest="verbosity")
 parser.add_argument("-s", "--seed", help="seed of map to generate", dest="seed")
 parser.add_argument("-i", "--iterations", help="# of games to run", type=int, default=10, dest="iterations")
@@ -87,7 +87,7 @@ def logInfo(results, loggingFile):
     loggingFile.write(logLine)
 
 
-def playGames(binary, replayDirectory, dimension, verbosity, bots, iterations=10, seed=None, compress=False, log=False):
+def playGames(binary, replayDirectory, dimension, verbosity, bots, iterations=10, seed=None, noCompress=False, log=False):
     commands = []
     binary = os.path.abspath(binary)
 
@@ -102,7 +102,7 @@ def playGames(binary, replayDirectory, dimension, verbosity, bots, iterations=10
     else:
         commands.append("--no-replay")
     
-    if compress:
+    if noCompress:
         commands.append("--no-compression")
     if not log:
         commands.append("--no-logs")
@@ -134,4 +134,4 @@ def playGames(binary, replayDirectory, dimension, verbosity, bots, iterations=10
 
 
 
-playGames(args.binary, args.replayDirectory, args.dimension, args.verbosity, args.bots, args.iterations, args.seed, args.compress, args.log)
+playGames(args.binary, args.replayDirectory, args.dimension, args.verbosity, args.bots, args.iterations, args.seed, args.noCompress, args.log)
