@@ -125,7 +125,7 @@ def playGames(binary, replayDirectory, dimension, verbosity, bots, iterations=10
     for i in range(iterations):
         print(f"GAME {i+1}:")
         matchOutput = playGame(binary, dimension, commands, bots)
-        print(matchOutput)
+        # print(matchOutput)
         results = json.loads(matchOutput)
         logInfo(results, loggingFile)
         print("========================================")

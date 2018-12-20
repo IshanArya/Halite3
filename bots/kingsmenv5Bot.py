@@ -1,4 +1,3 @@
-import random
 import hlt
 from hlt import constants
 from hlt.positionals import Position, Direction
@@ -28,7 +27,7 @@ def getClosestShipyardAdjacentCell(ship):
         if currentDistance < shortestDistance:
             closestCell = target_pos
             shortestDistance = currentDistance
-    
+
     return closestCell
 
 def isShipInspired(ship): # check if ship is inspired
@@ -62,9 +61,7 @@ def evaluateBestMoveForShip(ship):
         logging.info(f"shipStatus Object: {shipStatus}")
         shipStatus[ship.id]["wealthCellObjective"] = wealthyMapCells[(nextWealthyCellToAssign) % len(wealthyMapCells)]
         nextWealthyCellToAssign += 1
-    tempGoal = shipStatus[ship.id]["wealthCellObjective"]
-    logging.info(f"Ship {ship.id} is navigating towards: {tempGoal}")
-    
+
     # BIG EDGE CASE: Check if ship has enough halite to move!!
     if ship.halite_amount < (1/constants.MOVE_COST_RATIO) * game_map[ship.position].halite_amount:
         logging.info(f"Ship {ship.id} does not have enough halite to move.")
@@ -86,8 +83,8 @@ def evaluateBestMoveForShip(ship):
                 return ship.move(game_map.get_unsafe_moves(ship.position, me.shipyard.position)[0])
             navigatingShips.append(ship)
         return None
-            
-     
+
+
     if ship.halite_amount >= constants.MAX_HALITE:
         shipStatus[ship.id]["movement"] = "returning"
 
@@ -98,7 +95,7 @@ def evaluateBestMoveForShip(ship):
             logging.info(f"Ship {ship.id} will be returning.")
             navigatingShips.append(ship)
             return None
-    
+
     # All commands if ship is exploring
     if game_map[ship.position].halite_amount >= haliteNeededToSearch:
         game_map[ship.position].booked = True
@@ -118,18 +115,15 @@ def evaluateBestMoveForShip(ship):
     return None
 
 
-    
-    
+
+
 # Pregame
 wealthyMapCells = game_map.getWealthyCells(200, me.shipyard.position)
-
-logging.info(f"Total Halite-({game_map.totalHalite})-")
-logging.info(f"Width-({game_map.width})-")
+logging.info(f"Total Halite is {game_map.totalHalite}")
 
 
 # Actual Game
-game.ready("Experiment One Bot")
-logging.info("Reach")
+game.ready("Kingsmen v5 Bot")
 
 logging.info("Successfully created bot! My Player ID is {}.".format(game.my_id))
 
@@ -138,7 +132,7 @@ while True:
     game.update_frame()
     me = game.me
     game_map = game.game_map
-    logging.info(f"Average Halite Amount: {game_map.averageHaliteAmount}")
+
     if game.turn_number > 50 and game.turn_number % 10 == 0:
         logging.info(f"Finding wealthy cells with at least {haliteNeededToSearch * 2} halite.")
         tempWealthyMapCells = game_map.getWealthyCells(
@@ -147,8 +141,6 @@ while True:
             wealthyMapCells = tempWealthyMapCells
             logging.info(f"Wealthy Map Cells Prioritized: {wealthyMapCells}")
             nextWealthyCellToAssign = 0
-    else:
-        logging.info(f"Wealthy Map Cells Prioritized: {wealthyMapCells}")
 
     command_queue = []
 
@@ -167,19 +159,31 @@ while True:
         if bestMoveForShip:
             logging.info(f"Best move for ship {ship.id} is {bestMoveForShip}")
             command_queue.append(bestMoveForShip)
-    
+
+    stillNavigatingShips = []
     logging.info(f"Navigating ships: {navigatingShips}")
     for ship in navigatingShips:
         logging.info(f"Still trying to find {ship.id} a move.")
         direction = game_map.intelligent_navigate(
-            ship, 
+            ship,
             shipStatus[ship.id]["wealthCellObjective"] if shipStatus[ship.id]["movement"] == "exploring" else me.shipyard.position)
+        if direction:
+            logging.info(f"Ship {ship.id} is going to be moving in direction: {direction}")
+            command_queue.append(ship.move(direction))
+        else:
+            stillNavigatingShips.append(ship)
+    for ship in stillNavigatingShips:
+        logging.info(f"Going to find {ship.id} a move this time.")
+        direction = game_map.intelligent_navigate(
+            ship,
+            shipStatus[ship.id]["wealthCellObjective"] if shipStatus[ship.id]["movement"] == "exploring" else me.shipyard.position,
+            True)
         logging.info(f"Ship {ship.id} is going to be moving in direction: {direction}")
         command_queue.append(ship.move(direction))
-    
+
     navigatingShips = []
 
-    if game.turn_number < constants.MAX_TURNS / 3 and me.halite_amount >= constants.SHIP_COST and not game_map[me.shipyard].booked:
+    if game.turn_number < constants.MAX_TURNS / 2.3 and me.halite_amount >= constants.SHIP_COST and not game_map[me.shipyard].is_occupied and not game_map[me.shipyard].booked:
         game_map[me.shipyard.position].booked = True;
         command_queue.append(game.me.shipyard.spawn())
 
@@ -187,6 +191,3 @@ while True:
 
 
 # Enclosed methods
-
-
-
