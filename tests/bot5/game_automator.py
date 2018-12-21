@@ -118,7 +118,7 @@ def playGames(binary, replayDirectory, dimension, verbosity, bots, iterations=10
         results = json.loads(matchOutput)
         logInfo(results)
         print("========================================")
-    # loggingFile.close()
+    loggingFile.close()
 
 
 
