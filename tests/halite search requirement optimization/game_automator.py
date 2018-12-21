@@ -74,6 +74,9 @@ def logInfo(results, loggingFile=None):
     for score in scores:
         print(f"\tPlayer {i} - {score}")
         i += 1
+    if int(winner) == 0:
+        return True
+    return False
 
 
 def playGames(binary, replayDirectory, dimension, verbosity, bots, iterations=10, seed=None, noCompress=False, log=False):
@@ -106,18 +109,22 @@ def playGames(binary, replayDirectory, dimension, verbosity, bots, iterations=10
 
 
     print(commands)
-    # loggingFile = f"{len(bots)}-{dimension}.csv"
-    # loggingFile = open(loggingFile, "a+")
     print("Starting games!")
     
-    
+    numberOfWins = 0
+    numberOfLosses = 0
     for i in range(iterations):
         print(f"GAME {i+1}:")
         matchOutput = playGame(binary, dimension, commands, bots)
-        print(matchOutput)
+        # print(matchOutput)
         results = json.loads(matchOutput)
-        logInfo(results)
+        didWin = logInfo(results)
+        if didWin:
+            numberOfWins += 1
+        else:
+            numberOfLosses += 1
         print("========================================")
+    print(f"Wins:{numberOfWins} v. Losses:{numberOfLosses}")
 
 
 
