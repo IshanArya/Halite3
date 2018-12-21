@@ -31,29 +31,6 @@ def getClosestShipyardAdjacentCell(ship):
     
     return closestCell
 
-def isShipInspired(ship): # check if ship is inspired
-    numberOfEnemyShips = 0
-    for i in range(-constants.INSPIRATION_RADIUS, constants.INSPIRATION_RADIUS + 1):  # x coordinate
-        yCheck = constants.INSPIRATION_RADIUS - abs(i)  # y values to check
-        # y coordinate (+1 because the stop parameter is not included)
-        for j in range(-yCheck, yCheck + 1):
-            add_on = Position(i, j)
-            if game_map[add_on + ship.position].is_occupied:
-                isEnemyShip = True
-                for aship in me.get_ships():
-                    if aship.id == (game_map[add_on + ship.position]).ship.id:
-                        isEnemyShip = False
-
-                if isEnemyShip:
-                    numberOfEnemyShips += 1
-                    if numberOfEnemyShips >= 2:
-                        break
-    logging.info(f"Enemy Ship Counter within the Inspired Radius: {numberOfEnemyShips}")
-    if numberOfEnemyShips >= 2:
-        logging.info(f"The Ship is inspired, {game.turn_number}")
-        return True
-    return False
-
 def evaluateBestMoveForShip(ship):
     global nextWealthyCellToAssign, endGame
     if ship.id not in shipStatus:
