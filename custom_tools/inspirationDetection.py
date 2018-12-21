@@ -5,9 +5,8 @@ for i in range(-constants.INSPIRATION_RADIUS, constants.INSPIRATION_RADIUS + 1):
         add_on = Position(i,j)
         if game_map[add_on + ship.position].is_occupied:
             isEnemyShip = True
-            for aship in me.get_ships():
-                if aship.id == (game_map[add_on + ship.position]).ship.id:
-                    isEnemyShip = False
+            if game_map[add_on + ship.position].ship.owner == ship.owner:
+                isEnemyShip = False
 
             if isEnemyShip:
                 numberOfEnemyShips += 1
