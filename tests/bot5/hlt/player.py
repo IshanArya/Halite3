@@ -12,7 +12,6 @@ class Player:
         self.halite_amount = halite
         self._ships = {}
         self._dropoffs = {}
-        self.dropPoints = [shipyard] + self.get_dropoffs()
 
     def get_ship(self, ship_id):
         """
@@ -75,4 +74,3 @@ class Player:
         self.halite_amount = halite
         self._ships = {id: ship for (id, ship) in [Ship._generate(self.id) for _ in range(num_ships)]}
         self._dropoffs = {id: dropoff for (id, dropoff) in [Dropoff._generate(self.id) for _ in range(num_dropoffs)]}
-        self.dropPoints = [self.shipyard] + self.get_dropoffs()

@@ -113,7 +113,11 @@ while True:
     game.update_frame()
     me = game.me
     game_map = game.game_map
+    command_queue = []
+    
     logging.info(f"Average Halite Amount: {game_map.averageHaliteAmount}")
+    logging.info(f"Median Halite Amount: {game_map.medianHaliteAmount}")
+    logging.info(f"Halite Needed to Search: {haliteNeededToSearch}")
     if game.turn_number > 50 and game.turn_number % 10 == 0:
         logging.info(f"Finding wealthy cells with at least {haliteNeededToSearch * 2} halite.")
         foundCells = game_map.updateGoalCells(haliteNeededToSearch * 2, me.shipyard)
@@ -123,7 +127,7 @@ while True:
     else:
         logging.info(f"Wealthy Map Cells Prioritized: {me.shipyard.goalCells}")
 
-    command_queue = []
+    
 
     if haliteNeededToSearch >= 50:
         haliteNeededToSearch -= 0.3

@@ -238,6 +238,14 @@ class GameMap:
             return True
         return False
 
+    def getTotalHaliteAroundAPoint(self, centerPosition, radius):
+        totalHalite = 0
+        for i in range(-radius, radius + 1): #x coordinate
+            yCheck = radius - abs(i)
+            for j in range(-yCheck, yCheck + 1): #y coordinate (+1 because the stop parameter is not included)
+                checkingPosition = Position(i,j) + centerPosition
+                totalHalite += self[checkingPosition].halite_amount
+        return totalHalite
 
 
     def _scanMap(self):
