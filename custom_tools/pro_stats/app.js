@@ -165,7 +165,7 @@ async function doStuffWithInfo(data) {
     return minimumDistanceFromShipyard;
 }
 
-getGameLinks(2807, 250).then(parseGameJson).then(doStuffWithInfo).then(distances => {
+getGameLinks(2807, 145).then(parseGameJson).then(doStuffWithInfo).then(distances => {
     console.log("Minimum Distances From Shipyard");
     console.log(`\t2`);
     console.log(`\t\t32:${minimumDistanceFromShipyard[2][32]}`);
