@@ -9,24 +9,23 @@ game = hlt.Game()
 me = game.me
 game_map = game.game_map
 
-maxNumberOfShips = 10
+haliteReserve = constants.SHIP_COST
 haliteNeededToSearch = max(game_map.averageHaliteAmount, game_map.medianHaliteAmount)
-minimumDistanceBetweenDropPoints = 15
+minimumDistanceBetweenDropPoints = 17
 radiusOfDropPoint = 4
-reserveHaliteForDropOff = False
 justCreatedDropOffs = []
-shipStatus = {}
+shipInfo = {}
 navigatingShips = []
-nextWealthyCellToAssign = 0
 endGame = False
 
 
 
-def getClosestShipyardAdjacentCell(ship):
+def getClosestDropPointAdjacentCell(ship):
+    closestDropPointPosition = findClosestDropPointPosition(ship.position)
     shortestDistance = 1000
     closestCell = None
     for direction in Direction.get_all_cardinals():
-        target_pos = me.shipyard.position.directional_offset(direction)
+        target_pos = closestDropPointPosition.directional_offset(direction)
         currentDistance = game_map.calculate_distance(ship.position, target_pos)
         if currentDistance < shortestDistance:
             closestCell = target_pos
@@ -35,15 +34,12 @@ def getClosestShipyardAdjacentCell(ship):
     return closestCell
 
 def evaluateBestMoveForShip(ship):
-    global nextWealthyCellToAssign, endGame
-    if ship.id not in shipStatus:
-        shipStatus[ship.id] = {}
-        shipStatus[ship.id]["movement"] = "exploring"
-        logging.info(f"shipStatus Object: {shipStatus}")
-        shipStatus[ship.id]["wealthCellObjective"] = me.shipyard.goalCells[(nextWealthyCellToAssign) % len(me.shipyard.goalCells)]
-        nextWealthyCellToAssign += 1
-    tempGoal = shipStatus[ship.id]["wealthCellObjective"]
-    logging.info(f"Ship {ship.id} is navigating towards: {tempGoal}")
+    global endGame
+    if ship.id not in shipInfo:
+        shipInfo[ship.id] = {}
+        logging.info(f"Initializing ship: {ship.id}")
+        shipInfo[ship.id]["status"] = "exploring"
+        assignGoal(ship)
     
     # BIG EDGE CASE: Check if ship has enough halite to move!!
     if ship.halite_amount < (1/constants.MOVE_COST_RATIO) * game_map[ship.position].halite_amount:
@@ -51,33 +47,30 @@ def evaluateBestMoveForShip(ship):
         game_map[ship.position].booked = True
         return ship.stay_still()
 
-
-    distanceFromShipyard = game_map.calculate_distance(ship.position, me.shipyard.position)
+    closestDropPointPosition = findClosestDropPointPosition(ship.position)
+    distanceFromClosestDropPoint = game_map.calculate_distance(ship.position, closestDropPointPosition)
     turnsLeft = constants.MAX_TURNS - game.turn_number
-    logging.info(f"Distance from shipyard: {distanceFromShipyard}")
+    logging.info(f"Distance from closest drop point: {distanceFromClosestDropPoint}")
     logging.info(f"Turns left: {turnsLeft}")
-    if endGame or shipStatus[ship.id]["movement"] == "ending" or distanceFromShipyard + 2 > turnsLeft:
+    if endGame or shipInfo[ship.id]["status"] == "ending" or distanceFromClosestDropPoint + 2 > turnsLeft:
         endGame = True
         logging.info(f"End game for {ship.id}")
-        shipStatus[ship.id]["movement"] = "ending"
-        if ship.position != me.shipyard.position:
-            shipStatus[ship.id]["wealthCellObjective"] = getClosestShipyardAdjacentCell(ship)
-            if ship.position == shipStatus[ship.id]["wealthCellObjective"]:
-                return ship.move(game_map.get_unsafe_moves(ship.position, me.shipyard.position)[0])
+        shipInfo[ship.id]["status"] = "ending"
+        if ship.position != closestDropPointPosition:
+            shipInfo[ship.id]["goal"] = closestDropPointPosition
+            if ship.position == shipInfo[ship.id]["goal"]:
+                return ship.move(game_map.get_unsafe_moves(ship.position, closestDropPointPosition)[0])
             navigatingShips.append(ship)
         return None
-            
-     
+              
     if ship.halite_amount >= constants.MAX_HALITE:
-        shipStatus[ship.id]["movement"] = "returning"
-        shipStatus[ship.id]["closestDropPoint"] = findClosestDropPoint(ship.position)
+        shipInfo[ship.id]["status"] = "returning"
 
-    if shipStatus[ship.id]["movement"] == "returning":
-        if ship.position == shipStatus[ship.id]["closestDropPoint"].position:
-            shipStatus[ship.id]["movement"] = "exploring"
+    if shipInfo[ship.id]["status"] == "returning":
+        if ship.position == findClosestDropPointPosition(ship.position):
+            shipInfo[ship.id]["status"] = "exploring"
         else:
             logging.info(f"Ship {ship.id} will be returning.")
-            shipStatus[ship.id]["closestDropPoint"] = findClosestDropPoint(ship.position)
             navigatingShips.append(ship)
             return None
     
@@ -98,21 +91,29 @@ def evaluateBestMoveForShip(ship):
         logging.info(f"Ship {ship.id} will be moving to adjacent square: {bestCell + ship.position}")
         return ship.move(Direction.convert((bestCell.x, bestCell.y)))
 
-    if game_map[shipStatus[ship.id]["wealthCellObjective"]].halite_amount < haliteNeededToSearch:
-        shipStatus[ship.id]["wealthCellObjective"] = me.shipyard.goalCells[(nextWealthyCellToAssign) % len(me.shipyard.goalCells)]
-        nextWealthyCellToAssign += 1
+    shipGoal = shipInfo[ship.id]["goal"]
+    if game_map[shipGoal].halite_amount < haliteNeededToSearch:
+        assignGoal(ship)
     navigatingShips.append(ship)
     return None
 
 def assignGoal(ship):
-    pass
+    closestDropPoint = findClosestDropPointPosition(ship.position)
+    allReservedGoals = set(filter(lambda currentShip: currentShip.id in shipInfo, me.get_ships()))
+    allReservedGoals.remove(ship)
+    allReservedGoals = set(map(lambda currentShip: shipInfo[currentShip.id]["goal"], allReservedGoals))
 
-def findClosestDropPoint(position):
-    dropPoints = me.get_dropoffs() + justCreatedDropOffs
-    closestDropPoint = me.shipyard
-    distance = game_map.calculate_distance(closestDropPoint.position, position)
+    shipGoal = game_map.getGoalCell(closestDropPoint, allReservedGoals)
+    shipInfo[ship.id]["goal"] = shipGoal
+    logging.info(f"New goal of ship {ship.id}: {shipGoal}")
+
+
+def findClosestDropPointPosition(position):
+    dropPoints = list(map(lambda dropoff: dropoff.position, me.get_dropoffs())) + justCreatedDropOffs
+    closestDropPoint = me.shipyard.position
+    distance = game_map.calculate_distance(closestDropPoint, position)
     for dropPoint in dropPoints:
-        distanceToDropPoint = game_map.calculate_distance(dropPoint.position, position)
+        distanceToDropPoint = game_map.calculate_distance(dropPoint, position)
         if(distanceToDropPoint < distance):
             closestDropPoint = dropPoint
             distance = distanceToDropPoint
@@ -122,8 +123,8 @@ def findClosestDropPoint(position):
 def validDropoffCreationPoint(ship):
     if game.turn_number > constants.MAX_TURNS / 1.5:
         return False
-    closestDropPoint = findClosestDropPoint(ship.position)
-    if(game_map.calculate_distance(closestDropPoint.position, ship.position) < minimumDistanceBetweenDropPoints):
+    closestDropPointPosition = findClosestDropPointPosition(ship.position)
+    if(game_map.calculate_distance(closestDropPointPosition, ship.position) < minimumDistanceBetweenDropPoints):
         return False
     
     totalHaliteAround = game_map.getTotalHaliteAroundAPoint(ship.position, radiusOfDropPoint)
@@ -132,12 +133,11 @@ def validDropoffCreationPoint(ship):
     logging.info(f"Total Halite Around: {totalHaliteAround}")
     if totalHaliteAround < dropOffHaliteThreshhold:
         return False
-    
+    global haliteReserve
+    haliteReserve = constants.SHIP_COST + constants.DROPOFF_COST
     haliteWallet = ship.halite_amount + game_map[ship.position].halite_amount + me.halite_amount
     if haliteWallet < constants.DROPOFF_COST:
         logging.info(f"Not enough halite to create dropoff.")
-        global reserveHaliteForDropOff
-        reserveHaliteForDropOff = True
         return False
 
     return True
@@ -146,7 +146,7 @@ def createDropOffPoint(ship):
     global reserveHaliteForDropOff
     reserveHaliteForDropOff = False
     me.halite_amount -= constants.DROPOFF_COST
-    justCreatedDropOffs.append(ship)
+    justCreatedDropOffs.append(ship.position)
     return ship.make_dropoff()
 
 
@@ -179,8 +179,6 @@ while True:
             # logging.info(f"Wealthy Map Cells Prioritized: {me.shipyard.goalCells}")
             nextWealthyCellToAssign = 0
 
-
-
     # if haliteNeededToSearch >= 50:
     #     haliteNeededToSearch -= 0.3
     #     logging.info(f"Average amount of halite in map: {game_map.averageHaliteAmount}")
@@ -200,21 +198,22 @@ while True:
     logging.info(f"Navigating ships: {navigatingShips}")
     for ship in navigatingShips:
         logging.info(f"Still trying to find {ship.id} a move.")
+        destination = shipInfo[ship.id]["goal"]
+        if shipInfo[ship.id]["status"] == "returning":
+            destination = findClosestDropPointPosition(ship.position)
         direction = game_map.intelligent_navigate(
             ship, 
-            shipStatus[ship.id]["wealthCellObjective"] if \
-                shipStatus[ship.id]["movement"] == "exploring" else \
-                shipStatus[ship.id]["closestDropPoint"].position)
+            destination)
         logging.info(f"Ship {ship.id} is going to be moving in direction: {direction}")
         command_queue.append(ship.move(direction))
     
     navigatingShips = []
     justCreatedDropOffs = []
 
-    if game.turn_number < constants.MAX_TURNS / 3 and \
-        me.halite_amount >= constants.SHIP_COST and \
-        not game_map[me.shipyard].booked and \
-        not reserveHaliteForDropOff:
+    logging.info(f"Halite Reserve: {haliteReserve}")
+    if game.turn_number < constants.MAX_TURNS / 1.7 and \
+        me.halite_amount >= haliteReserve and \
+        not game_map[me.shipyard].booked:
         game_map[me.shipyard.position].booked = True;
         command_queue.append(game.me.shipyard.spawn())
 
