@@ -83,7 +83,7 @@ def evaluateBestMoveForShip(ship):
             navigatingShips.append(ship)
         return None
 
-
+    logging.info(f"max halite constant: {constants.MAX_HALITE}")
     if ship.halite_amount >= constants.MAX_HALITE:
         shipStatus[ship.id]["movement"] = "returning"
 
