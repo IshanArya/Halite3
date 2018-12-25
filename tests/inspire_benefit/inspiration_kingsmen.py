@@ -17,7 +17,7 @@ wealthyMapCells = []
 nextWealthyCellToAssign = 0
 endGame = False
 
-
+logging.info(f"Inspiration Radius:{constants.INSPIRATION_RADIUS}")
 
 def getClosestShipyardAdjacentCell(ship):
     shortestDistance = 1000
@@ -100,10 +100,11 @@ def evaluateBestMoveForShip(ship):
         game_map[ship.position].booked = True
         logging.info(f"Ship {ship.id} will be staying.")
         return ship.stay_still()
-    if isShipInspired(ship) and (.25*game_map[ship.position].halite_amount*3) >= .25 * haliteNeededToSearch:
+    if isShipInspired(ship) and (.25*game_map[ship.position].halite_amount*3) >= (.25 * haliteNeededToSearch):
         logging.info(f"Ship {ship.id} is inspired so it is gonna stay still and collect Halite")
         game_map[ship.position].booked = True
         return ship.stay_still()
+
     bestCell = game_map.getMostWealthyAdjacentCell(ship)
     if bestCell and game_map[bestCell + ship.position].halite_amount >= haliteNeededToSearch:
         game_map[bestCell + ship.position].booked = True
@@ -120,7 +121,7 @@ def evaluateBestMoveForShip(ship):
 
 
 # Pregame
-wealthyMapCells = game_map.getWealthyCells(200, me.shipyard.position)
+wealthyMapCells = game_map.getWealthyCells(2*haliteNeededToSearch, me.shipyard.position)
 if game_map.width == 64:
     spawnTurnDivider = 1.8
 elif game_map.width > 45:
@@ -130,7 +131,7 @@ logging.info(f"Total Halite is {game_map.totalHalite}")
 
 
 # Actual Game
-game.ready("Kingsmen v4 Bot")
+game.ready("Inspiration Kingsmen v4 Bot")
 logging.info("Reach")
 
 logging.info("Successfully created bot! My Player ID is {}.".format(game.my_id))
@@ -154,10 +155,19 @@ while True:
 
     if haliteNeededToSearch >= 50:
         haliteNeededToSearch -= 0.3
-        logging.info(f"Average amount of halite in map: {game_map.averageHaliteAmount}")
+        logging.info(f"Average Halite Amount: {game_map.averageHaliteAmount}")
     elif haliteNeededToSearch >= 10:
-        haliteNeededToSearch -= 0.1
+        haliteNeededToSearch -= .1
+
     # haliteNeededToSearch = game_map.averageHaliteAmount / 4
+    enemy_ship_positions = []
+    for y in range(game_map.height):
+        for x in range(game_map.width):
+            currentPosition = Position(x, y)
+            if game_map[currentPosition].is_occupied:
+                if game_map[currentPosition].ship.owner != me.id:
+                    enemy_ship_positions.append(currentPosition)
+    logging.info(f"Length of the Enemy Ship Positions: {len(enemy_ship_positions)}")
 
     for ship in me.get_ships():
         logging.info("For Loop has begun")

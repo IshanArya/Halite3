@@ -187,11 +187,11 @@ class GameMap:
         :return: A direction.
         """
 
-        for direction in self.get_unsafe_moves(ship.position, destination):
+        '''for direction in self.get_unsafe_moves(ship.position, destination):
             target_pos = ship.position.directional_offset(direction)
             if not self[target_pos].is_occupied and not self[target_pos].booked:
                 self[target_pos].booked = True
-                return direction
+                return direction'''
 
         for direction in self.get_unsafe_moves(ship.position, destination):
             target_pos = ship.position.directional_offset(direction)
@@ -210,7 +210,7 @@ class GameMap:
                 return direction
         self[ship.position].booked = True
         return Direction.Still
-    
+
     def getMostWealthyAdjacentCell(self, ship):
         maxHalite = 0
         bestCell = None
@@ -223,7 +223,7 @@ class GameMap:
 
         # subtract ship.position to just get movement
         return (bestCell - ship.position) if bestCell else bestCell
-    
+
     def getWealthyCells(self, wealthyMinimum, shipyardPosition):
         """
         Return ordered list of wealthy cells by distance away from shipyard
