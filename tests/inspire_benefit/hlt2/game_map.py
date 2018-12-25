@@ -230,6 +230,7 @@ class GameMap:
     def getWealthyCells(self, wealthyMinimum, shipyardPosition):
         """
         Return ordered list of wealthy cells by distance away from shipyard
+
         :param wealthyMinimum: halite needed to be in list
         :param shipyardPosition: position of shipyard
         :return: ordered list of wealthy cells
@@ -239,38 +240,13 @@ class GameMap:
         for i in range(self.width):
             for j in range(self.height):
                 currentPosition = Position(i, j)
-                if self[currentPosition].halite_amount >= wealthyMinimum and not self[currentPosition].has_structure:
+                if self[currentPosition].halite_amount > wealthyMinimum and not self[currentPosition].has_structure:
                     wealthyMapCells.append(currentPosition)
                     distances.append(self.calculate_distance(shipyardPosition, currentPosition))
         # logging.info(f"All wealthy cells: {wealthyMapCells}")
         distance_sd = stdev(distances)
-        distance_mean = mean(distances)
-        return sorted(wealthyMapCells, key = lambda wealthyCell: ((self.calculate_distance(shipyardPosition, wealthyCell) - distance_mean) / distance_sd) - (self[wealthyCell].halite_amount - self.averageHaliteAmount)/ self.haliteAmountStandardDeviation)
-        
-    def getHypotheticalInspiredWealthyCells(self,wealthyMinimum,shipyardPosition,me):
-        '''
-        Return ordered list of wealthy cells by distance away from shipyard while taking into account Inspiration
-        :param wealthyMinimum: halite needed to be in list
-        :param shipyardPosition: position of shipyard
-        :param me: pass your player object
-        :return: ordered list of wealthy cells
-        '''
-        potential_inspiration_positions = []
-        # i didnt put 0,0 in the inspiration_positions cuz theres no point
-        inspiration_radius = {Position(-4, 0),Position(-3, -1),Position(-3, 0),Position(-3, 1),Position(-2, -2),Position(-2, -1),Position(-2, 0),Position(-2, 1),Position(-2, 2),Position(-1, -3),
-                              Position(-1, -2),Position(-1, -1),Position(-1, 0),Position(-1, 1),Position(-1, 2),Position(-1, 3),Position(0, -4),Position(0, -3),Position(0, -2),Position(0, -1),
-                              Position(0, 1),Position(0, 2),Position(0, 3),Position(0, 4),Position(1, -3),Position(1, -2),Position(1, -1),Position(1, 0),Position(1, 1),Position(1, 2),Position(1, 3),
-                              Position(2, -2),Position(2, -1),Position(2, 0),Position(2, 1),Position(2, 2),Position(3, -1),Position(3, 0),Position(3, 1),Position(4, 0)}
-        for i in range(self.width):
-            for j in range(self.height):
-                currentPosition = Position(i,j)
-                if self[currentPosition].is_occupied and self[currentPosition].ship.owner != me.id:
-                    for x in inspiration_positions:
-                        new_position = currentPosition+x
-                        if self[new_position].is_occupied and self[new_position].ship.owner != me.id:
-                            if self[new_position].halite_amount*3 >= wealthyMinimum and not self[currentPosition].has_structure:
-                                potential_inspiration_positions.append(new_position)
-        return potential_inspiration_positions
+        return sorted(wealthyMapCells, key = lambda wealthyCell: ((self.calculate_distance(shipyardPosition, wealthyCell)) / distance_sd) - (self[wealthyCell].halite_amount - self.averageHaliteAmount)/ self.haliteAmountStandardDeviation)
+
     @staticmethod
     def _generate():
         """
