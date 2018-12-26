@@ -5,7 +5,7 @@ from .entity import Entity, Shipyard, Ship, Dropoff
 from .player import Player
 from .positionals import Direction, Position
 from .common import read_input
-from statistics import stdev
+from statistics import stdev,mean
 
 
 class MapCell:
@@ -74,6 +74,7 @@ class GameMap:
         self.width = width
         self.height = height
         self._cells = cells
+
         totalHaliteInMap = 0
         halite_amount = []
         for y in range(self.height):
@@ -83,6 +84,7 @@ class GameMap:
                 self[currentPosition].booked = False
                 halite_amount.append(self[currentPosition].halite_amount)
                 totalHaliteInMap += self[currentPosition].halite_amount
+
         self.totalHalite = totalHaliteInMap
         self.averageHaliteAmount = totalHaliteInMap / (self.height * self.width)
         self.haliteAmountStandardDeviation = stdev(halite_amount)
@@ -189,13 +191,6 @@ class GameMap:
         :param definite: whether to hestitate about booking or not
         :return: A direction.
         """
-
-        '''for direction in self.get_unsafe_moves(ship.position, destination):
-            target_pos = ship.position.directional_offset(direction)
-            if not self[target_pos].is_occupied and not self[target_pos].booked:
-                self[target_pos].booked = True
-                return direction'''
-
         for direction in self.get_unsafe_moves(ship.position, destination):
             target_pos = ship.position.directional_offset(direction)
             if not self[target_pos].booked:
@@ -235,18 +230,20 @@ class GameMap:
         :return: ordered list of wealthy cells
         """
         wealthyMapCells = []
-        distances = []
+        distances = set({}) #set
         for i in range(self.width):
             for j in range(self.height):
                 currentPosition = Position(i, j)
                 if self[currentPosition].halite_amount >= wealthyMinimum and not self[currentPosition].has_structure:
                     wealthyMapCells.append(currentPosition)
-                    distances.append(self.calculate_distance(shipyardPosition, currentPosition))
+                    distances.add(self.calculate_distance(shipyardPosition, currentPosition))
         # logging.info(f"All wealthy cells: {wealthyMapCells}")
-        distance_sd = stdev(distances)
-        distance_mean = mean(distances)
-        return sorted(wealthyMapCells, key = lambda wealthyCell: ((self.calculate_distance(shipyardPosition, wealthyCell) - distance_mean) / distance_sd) - (self[wealthyCell].halite_amount - self.averageHaliteAmount)/ self.haliteAmountStandardDeviation)
-        
+        if len(distances) >= 2:
+            distance_sd = stdev(distances)
+            distance_mean = mean(distances)
+            return sorted(wealthyMapCells, key = lambda wealthyCell: ((self.calculate_distance(shipyardPosition, wealthyCell) - distance_mean) / distance_sd) - (self[wealthyCell].halite_amount - self.averageHaliteAmount)/ self.haliteAmountStandardDeviation)
+        else:
+            return sorted(wealthyMapCells, key = lambda wealthyCell: ((self.calculate_distance(shipyardPosition, wealthyCell)/self.width) - (self[wealthyCell].halite_amount)/ constants.MAX_HALITE))
     def getHypotheticalInspiredWealthyCells(self,wealthyMinimum,shipyardPosition,me):
         '''
         Return ordered list of wealthy cells by distance away from shipyard while taking into account Inspiration
@@ -257,10 +254,10 @@ class GameMap:
         '''
         potential_inspiration_positions = []
         # i didnt put 0,0 in the inspiration_positions cuz theres no point
-        inspiration_radius = {Position(-4, 0),Position(-3, -1),Position(-3, 0),Position(-3, 1),Position(-2, -2),Position(-2, -1),Position(-2, 0),Position(-2, 1),Position(-2, 2),Position(-1, -3),
-                              Position(-1, -2),Position(-1, -1),Position(-1, 0),Position(-1, 1),Position(-1, 2),Position(-1, 3),Position(0, -4),Position(0, -3),Position(0, -2),Position(0, -1),
-                              Position(0, 1),Position(0, 2),Position(0, 3),Position(0, 4),Position(1, -3),Position(1, -2),Position(1, -1),Position(1, 0),Position(1, 1),Position(1, 2),Position(1, 3),
-                              Position(2, -2),Position(2, -1),Position(2, 0),Position(2, 1),Position(2, 2),Position(3, -1),Position(3, 0),Position(3, 1),Position(4, 0)}
+        inspiration_positions = [Position(-4, 0),Position(-3, -1),Position(-3, 0),Position(-3, 1),Position(-2, -2),Position(-2, -1),Position(-2, 0),Position(-2, 1),Position(-2, 2),Position(-1, -3),
+                                 Position(-1, -2),Position(-1, -1),Position(-1, 0),Position(-1, 1),Position(-1, 2),Position(-1, 3),Position(0, -4),Position(0, -3),Position(0, -2),Position(0, -1),
+                                 Position(0, 1),Position(0, 2),Position(0, 3),Position(0, 4),Position(1, -3),Position(1, -2),Position(1, -1),Position(1, 0),Position(1, 1),Position(1, 2),Position(1, 3),
+                                 Position(2, -2),Position(2, -1),Position(2, 0),Position(2, 1),Position(2, 2),Position(3, -1),Position(3, 0),Position(3, 1),Position(4, 0)]
         for i in range(self.width):
             for j in range(self.height):
                 currentPosition = Position(i,j)

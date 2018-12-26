@@ -1,10 +1,10 @@
-import hlt2
-from hlt2 import constants
-from hlt2.positionals import Position, Direction
+import hlt
+from hlt import constants
+from hlt.positionals import Position, Direction
 
 import logging
 
-game = hlt2.Game()
+game = hlt.Game()
 # game.update_frame()
 me = game.me
 game_map = game.game_map
@@ -144,6 +144,7 @@ while True:
     me = game.me
     game_map = game.game_map
     hypothetical_inspiration_cells = game_map.getHypotheticalInspiredWealthyCells(2*haliteNeededToSearch,me.shipyard.position,me)
+
     if game.turn_number > 50 and game.turn_number % 10 == 0:
 
         logging.info(f"Finding wealthy cells with at least {haliteNeededToSearch * 2} halite.")
