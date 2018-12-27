@@ -13,9 +13,9 @@ haliteReserve = constants.SHIP_COST
 haliteNeededToSearch = max(game_map.averageHaliteAmount, game_map.medianHaliteAmount)
 minimumDistanceBetweenDropPoints = 17
 radiusOfDropPoint = 4
-justCreatedDropOffs = []
 shipInfo = {}
 navigatingShips = []
+percentHaliteToSpawn = .4
 endGame = False
 
 
@@ -63,6 +63,19 @@ def evaluateBestMoveForShip(ship):
             navigatingShips.append(ship)
         return None
               
+    if shipInfo[ship.id]["status"] == "spawningDropoff":
+        if validDropoffCreationPoint(ship):
+            game_map[ship.position].booked = True
+            haliteWallet = ship.halite_amount + game_map[ship.position].halite_amount + me.halite_amount
+            if haliteWallet >= constants.DROPOFF_COST:
+                logging.info(f"Turning ship {ship.id} into dropoff.")
+                return createDropOffPoint(ship)
+            else:
+                return ship.stay_still()
+        else:
+            shipInfo[ship.id]["status"] = "exploring"
+            del shipInfo[ship.id]["dropOffPoint"]
+
     if ship.halite_amount >= constants.MAX_HALITE:
         shipInfo[ship.id]["status"] = "returning"
 
@@ -78,18 +91,26 @@ def evaluateBestMoveForShip(ship):
     if game_map[ship.position].halite_amount >= haliteNeededToSearch:
         game_map[ship.position].booked = True
         if validDropoffCreationPoint(ship):
-            logging.info(f"Turning ship {ship.id} into dropoff.")
-            return createDropOffPoint(ship)
+            haliteWallet = ship.halite_amount + game_map[ship.position].halite_amount + me.halite_amount
+            if haliteWallet >= constants.DROPOFF_COST:
+                logging.info(f"Turning ship {ship.id} into dropoff.")
+                return createDropOffPoint(ship)
+            else:
+                shipInfo[ship.id]["status"] = "spawningDropoff"
+                shipInfo[ship.id]["dropOffPoint"] = ship.position
         else:
             logging.info(f"Ship {ship.id} NOT @ valid drop off creation point.")
         logging.info(f"Ship {ship.id} will be staying.")
         return ship.stay_still()
 
     bestCell = game_map.getMostWealthyAdjacentCell(ship)
-    if bestCell and game_map[bestCell + ship.position].halite_amount >= haliteNeededToSearch:
-        game_map[bestCell + ship.position].booked = True
-        logging.info(f"Ship {ship.id} will be moving to adjacent square: {bestCell + ship.position}")
-        return ship.move(Direction.convert((bestCell.x, bestCell.y)))
+    futureDropOffs = getDropOffsToBe()
+    if bestCell:
+        adjacentCell = bestCell + ship.position
+        if adjacentCell not in futureDropOffs and game_map[adjacentCell].halite_amount >= haliteNeededToSearch:
+            game_map[adjacentCell].booked = True
+            logging.info(f"Ship {ship.id} will be moving to adjacent square: {adjacentCell}")
+            return ship.move(Direction.convert((bestCell.x, bestCell.y)))
 
     shipGoal = shipInfo[ship.id]["goal"]
     if game_map[shipGoal].halite_amount < haliteNeededToSearch:
@@ -107,9 +128,9 @@ def assignGoal(ship):
     shipInfo[ship.id]["goal"] = shipGoal
     logging.info(f"New goal of ship {ship.id}: {shipGoal}")
 
-
 def findClosestDropPointPosition(position):
-    dropPoints = list(map(lambda dropoff: dropoff.position, me.get_dropoffs())) + justCreatedDropOffs
+    dropPoints = set(map(lambda dropoff: dropoff.position, me.get_dropoffs()))
+    dropPoints.update(getDropOffsToBe())
     closestDropPoint = me.shipyard.position
     distance = game_map.calculate_distance(closestDropPoint, position)
     for dropPoint in dropPoints:
@@ -133,12 +154,6 @@ def validDropoffCreationPoint(ship):
     logging.info(f"Total Halite Around: {totalHaliteAround}")
     if totalHaliteAround < dropOffHaliteThreshhold:
         return False
-    global haliteReserve
-    haliteReserve = constants.SHIP_COST + constants.DROPOFF_COST
-    haliteWallet = ship.halite_amount + game_map[ship.position].halite_amount + me.halite_amount
-    if haliteWallet < constants.DROPOFF_COST:
-        logging.info(f"Not enough halite to create dropoff.")
-        return False
 
     return True
     
@@ -146,9 +161,21 @@ def createDropOffPoint(ship):
     global reserveHaliteForDropOff
     reserveHaliteForDropOff = False
     me.halite_amount -= constants.DROPOFF_COST
-    justCreatedDropOffs.append(ship.position)
     return ship.make_dropoff()
 
+def getDropOffsToBe():
+    dropOffsToBe = []
+    for shipId in shipInfo:
+        if "dropOffPoint" in shipInfo[shipId]:
+            dropOffsToBe.append(shipInfo[shipId]["dropOffPoint"])
+    
+    return dropOffsToBe
+
+def purgeShipInfo(ships):
+    ships = set(map(lambda ship: ship.id, ships))
+    for shipId in list(shipInfo.keys()):
+        if shipId not in ships:
+            del shipInfo[shipId]
 
 # Pregame
 game_map.updateGoalCells(haliteNeededToSearch, me.shipyard)
@@ -207,17 +234,26 @@ while True:
         logging.info(f"Ship {ship.id} is going to be moving in direction: {direction}")
         command_queue.append(ship.move(direction))
     
-    navigatingShips = []
-    justCreatedDropOffs = []
 
     logging.info(f"Halite Reserve: {haliteReserve}")
-    if game.turn_number < constants.MAX_TURNS / 1.7 and \
-        me.halite_amount >= haliteReserve and \
-        not game_map[me.shipyard].booked:
-        game_map[me.shipyard.position].booked = True;
-        command_queue.append(game.me.shipyard.spawn())
+    percentHaliteLeft = game_map.getPercentHaliteLeft()
+    numberOfFutureDropOffs = len(getDropOffsToBe())
+    if numberOfFutureDropOffs > 0:
+        haliteReserve = constants.SHIP_COST + (constants.DROPOFF_COST * numberOfFutureDropOffs)
+    else:
+        haliteReserve = constants.SHIP_COST
+    if percentHaliteLeft > percentHaliteToSpawn:
+        if not game_map[me.shipyard].booked:
+            if me.halite_amount >= haliteReserve:
+                game_map[me.shipyard.position].booked = True;
+                command_queue.append(game.me.shipyard.spawn())
 
     game.end_turn(command_queue)
+
+    navigatingShips = []
+    logging.info(f"Navigating Ships at the End: {navigatingShips}")
+    purgeShipInfo(me.get_ships())
+
 
 
 # Enclosed methods

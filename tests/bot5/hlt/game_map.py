@@ -5,6 +5,7 @@ from .entity import Entity, Shipyard, Ship, Dropoff
 from .player import Player
 from .positionals import Direction, Position
 from .common import read_input
+from statistics import median
 
 
 
@@ -74,7 +75,8 @@ class GameMap:
         self.width = width
         self.height = height
         self._cells = cells
-        self._scanMap()
+
+        self.initialTotalHalite = self._scanMap()[0]
        
 
     def __getitem__(self, location):
@@ -182,12 +184,6 @@ class GameMap:
 
         for direction in self.get_unsafe_moves(ship.position, destination):
             target_pos = ship.position.directional_offset(direction)
-            if not self[target_pos].is_occupied and not self[target_pos].booked:
-                self[target_pos].booked = True
-                return direction
-
-        for direction in self.get_unsafe_moves(ship.position, destination):
-            target_pos = ship.position.directional_offset(direction)
             if not self[target_pos].booked:
                 self[target_pos].booked = True
                 return direction
@@ -204,6 +200,9 @@ class GameMap:
         self[ship.position].booked = True
         return Direction.Still
     
+    def getPercentHaliteLeft(self):
+        return self.totalHalite / self.initialTotalHalite
+
     def getMostWealthyAdjacentCell(self, ship):
         maxHalite = 0
         bestCell = None
@@ -272,17 +271,14 @@ class GameMap:
                 totalHaliteInMap += self[currentPosition].halite_amount
                 medianOfRow.append(self[currentPosition].halite_amount)
                 wealthyCells.append(currentPosition)
-            medianOfRow.sort()
-            middleOfMedianList = int(len(medianOfRow) / 2)
-            median = (medianOfRow[middleOfMedianList] + medianOfRow[middleOfMedianList + 1]) / 2
-            medianOfRows.append(median)
-        medianOfRows.sort()
-        middleOfMedianList = int(len(medianOfRows) / 2)
+            rowMedian = median(medianOfRow)
+            medianOfRows.append(rowMedian)
         wealthyCells.sort(key = lambda wealthyCell: -self[wealthyCell].halite_amount)
         self.wealthyCells = wealthyCells[:150]
-        self.medianHaliteAmount = (medianOfRows[middleOfMedianList] + medianOfRows[middleOfMedianList + 1]) / 2
+        self.medianHaliteAmount = median(medianOfRows)
         self.totalHalite = totalHaliteInMap
         self.averageHaliteAmount = totalHaliteInMap / (self.height * self.width)
+        return [self.totalHalite]
 
     @staticmethod
     def _generate():
