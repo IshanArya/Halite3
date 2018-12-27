@@ -242,7 +242,7 @@ while True:
         haliteReserve = constants.SHIP_COST + (constants.DROPOFF_COST * numberOfFutureDropOffs)
     else:
         haliteReserve = constants.SHIP_COST
-    if percentHaliteLeft > percentHaliteToSpawn:
+    if percentHaliteLeft > percentHaliteToSpawn and game.turn_number < constants.MAX_TURNS / 1.5:
         if not game_map[me.shipyard].booked:
             if me.halite_amount >= haliteReserve:
                 game_map[me.shipyard.position].booked = True;
