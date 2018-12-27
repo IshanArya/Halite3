@@ -70,6 +70,7 @@ while True:
         command_queue.append(game.me.shipyard.spawn())
 
     game.end_turn(command_queue)
+    logging.info("I CAN PRINT AFTER GAME ENDS.")
 
 
 # Enclosed methods
