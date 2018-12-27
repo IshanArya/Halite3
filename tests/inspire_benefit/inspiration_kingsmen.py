@@ -163,6 +163,7 @@ while True:
     elif haliteNeededToSearch >= 10:
         haliteNeededToSearch -= .1
 
+    logging.info(f"Total Halite in Map: {game_map.totalHalite}")
     # haliteNeededToSearch = game_map.averageHaliteAmount / 4
     enemy_ship_positions = []
     for y in range(game_map.height):
