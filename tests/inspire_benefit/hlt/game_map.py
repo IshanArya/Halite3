@@ -268,15 +268,16 @@ class GameMap:
                         if self[new_position].is_occupied and self[new_position].ship.owner != me.id:
                             if self[new_position].halite_amount*3 >= wealthyMinimum and not self[currentPosition].has_structure:
                                 potential_inspiration_positions.append(new_position)
-                                distances.add(self.calculate_distance(shipyardPosition, currentPosition))
+                                distances.add(self.calculate_distance(shipyardPosition, new_position))
         if len(distances) >= 2:
             distance_sd = stdev(distances)
             distance_mean = mean(distances)
             return sorted(potential_inspiration_positions, key = lambda wealthyCell: ((self.calculate_distance(shipyardPosition, wealthyCell) - distance_mean) / distance_sd) - (self[wealthyCell].halite_amount - self.averageHaliteAmount)/ self.haliteAmountStandardDeviation)
         else:
             return sorted(potential_inspiration_positions, key = lambda wealthyCell: ((self.calculate_distance(shipyardPosition, wealthyCell)/self.width) - (self[wealthyCell].halite_amount)/ constants.MAX_HALITE))
+
     def getComboWealthyCells(self,wealthyMinimum,shipyardPosition,me):
-        potential_inspiration_positions = []
+        comboWealthyCells = []
         # i didnt put 0,0 in the inspiration_positions cuz theres no point
         inspiration_positions = [Position(-4, 0),Position(-3, -1),Position(-3, 0),Position(-3, 1),Position(-2, -2),Position(-2, -1),Position(-2, 0),Position(-2, 1),Position(-2, 2),Position(-1, -3),
                                  Position(-1, -2),Position(-1, -1),Position(-1, 0),Position(-1, 1),Position(-1, 2),Position(-1, 3),Position(0, -4),Position(0, -3),Position(0, -2),Position(0, -1),
@@ -286,13 +287,22 @@ class GameMap:
         for i in range(self.width):
             for j in range(self.height):
                 currentPosition = Position(i,j)
+                if self[currentPosition].halite_amount >= wealthyMinimum and not self[currentPosition].has_structure:
+                    comboWealthyCells.append(currentPosition)
+                    distances.add(self.calculate_distance(shipyardPosition, currentPosition))
                 if self[currentPosition].is_occupied and self[currentPosition].ship.owner != me.id:
                     for x in inspiration_positions:
                         new_position = currentPosition+x
                         if self[new_position].is_occupied and self[new_position].ship.owner != me.id:
                             if self[new_position].halite_amount*3 >= wealthyMinimum and not self[currentPosition].has_structure:
-                                potential_inspiration_positions.append(new_position)
-                                distances.add(self.calculate_distance(shipyardPosition, currentPosition))
+                                comboWealthyCells.append(new_position)
+                                distances.add(self.calculate_distance(shipyardPosition, new_position))
+        if len(distances) >= 2:
+            distance_sd = stdev(distances)
+            distance_mean = mean(distances)
+            return sorted(comboWealthyCells, key = lambda wealthyCell: ((self.calculate_distance(shipyardPosition, wealthyCell) - distance_mean) / distance_sd) - (self[wealthyCell].halite_amount - self.averageHaliteAmount)/ self.haliteAmountStandardDeviation)
+        else:
+            return sorted(comboWealthyCells, key = lambda wealthyCell: ((self.calculate_distance(shipyardPosition, wealthyCell)/self.width) - (self[wealthyCell].halite_amount)/ constants.MAX_HALITE))
     @staticmethod
     def _generate():
         """
