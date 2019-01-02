@@ -178,7 +178,6 @@ class GameMap:
 
         :param ship: The ship to move.
         :param destination: Ending position
-        :param definite: whether to hestitate about booking or not
         :return: A direction.
         """
 
