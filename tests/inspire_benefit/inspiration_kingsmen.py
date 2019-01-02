@@ -101,6 +101,7 @@ def evaluateBestMoveForShip(ship):
         game_map[ship.position].booked = True
         logging.info(f"Ship {ship.id} will be staying.")
         return ship.stay_still()
+
     if isShipInspired(ship) and (.25*game_map[ship.position].halite_amount*3) >= (.25 * haliteNeededToSearch):
         logging.info(f"Ship {ship.id} is inspired so it is gonna stay still and collect Halite")
         game_map[ship.position].booked = True
@@ -122,7 +123,7 @@ def evaluateBestMoveForShip(ship):
 
 
 # Pregame
-wealthyMapCells = game_map.getWealthyCells(2*haliteNeededToSearch, me.shipyard.position)
+wealthyMapCells = game_map.getComboWealthyCells(2*haliteNeededToSearch, me.shipyard.position,me)
 
 if game_map.width == 64:
     spawnTurnDivider = 1.8
@@ -148,8 +149,8 @@ while True:
     if game.turn_number > 50 and game.turn_number % 10 == 0:
 
         logging.info(f"Finding wealthy cells with at least {haliteNeededToSearch * 2} halite.")
-        tempWealthyMapCells = game_map.getWealthyCells(
-            haliteNeededToSearch * 2, me.shipyard.position)
+        tempWealthyMapCells = game_map.getComboWealthyCells(
+            haliteNeededToSearch * 2, me.shipyard.position,me)
         if tempWealthyMapCells:
             wealthyMapCells = tempWealthyMapCells
             logging.info(f"Wealthy Map Cells Prioritized: {wealthyMapCells}")
@@ -163,15 +164,9 @@ while True:
     elif haliteNeededToSearch >= 10:
         haliteNeededToSearch -= .1
 
+    logging.info(f"Total Halite in Map: {game_map.totalHalite}")
     # haliteNeededToSearch = game_map.averageHaliteAmount / 4
-    enemy_ship_positions = []
-    for y in range(game_map.height):
-        for x in range(game_map.width):
-            currentPosition = Position(x, y)
-            if game_map[currentPosition].is_occupied:
-                if game_map[currentPosition].ship.owner != me.id:
-                    enemy_ship_positions.append(currentPosition)
-    logging.info(f"Length of the Enemy Ship Positions: {len(enemy_ship_positions)}")
+
 
     for ship in me.get_ships():
         logging.info("For Loop has begun")
