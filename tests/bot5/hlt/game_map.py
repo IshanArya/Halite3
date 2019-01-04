@@ -199,6 +199,9 @@ class GameMap:
         self[ship.position].booked = True
         return Direction.Still
     
+    def predictCollisions(self, ship):
+
+
     def getPercentHaliteLeft(self):
         return self.totalHalite / self.initialTotalHalite
 
@@ -277,6 +280,7 @@ class GameMap:
         self.medianHaliteAmount = median(medianOfRows)
         self.totalHalite = totalHaliteInMap
         self.averageHaliteAmount = totalHaliteInMap / (self.height * self.width)
+        self.haliteNeededToSearch = min(self.averageHaliteAmount, self.medianHaliteAmount)
         return [self.totalHalite]
 
     @staticmethod
