@@ -152,6 +152,18 @@ class GameMap:
                                   else Direction.invert(y_cardinality))
         return possible_moves
 
+    def getClosestAdjacentCell(self, ship, position):
+        shortestDistance = 1000
+        closestCell = None
+        for direction in Direction.get_all_cardinals():
+            target_pos = position.directional_offset(direction)
+            currentDistance = self.calculate_distance(ship.position, target_pos)
+            if currentDistance < shortestDistance:
+                closestCell = target_pos
+                shortestDistance = currentDistance
+        
+        return closestCell
+
     def naive_navigate(self, ship, destination):
         """
         Returns a singular safe move towards the destination.
@@ -181,6 +193,8 @@ class GameMap:
         :return: A direction.
         """
 
+        self.predictCollisions(ship)
+
         for direction in self.get_unsafe_moves(ship.position, destination):
             target_pos = ship.position.directional_offset(direction)
             if not self[target_pos].booked:
@@ -200,7 +214,64 @@ class GameMap:
         return Direction.Still
     
     def predictCollisions(self, ship):
+        for target_pos in ship.position.get_surrounding_cardinals():
+            if self[target_pos].booked:
+                continue
+            closestDropPointDistance = self.findClosestDropPoint(ship.owner, target_pos)[1]
+            if closestDropPointDistance <= 1:
+                continue
+            if self.isEnemyShip(ship.owner, self[target_pos].ship):
+                self[target_pos].booked = True
+                continue
+            adjacentEnemyShips = self.getAdjacentEnemyShips(ship.owner, target_pos)
+            for enemyShip in adjacentEnemyShips:
+                if self[target_pos].halite_amount < self[enemyShip.position].halite_amount:
+                    continue
+                if self[target_pos].halite_amount < self.haliteNeededToSearch / 2:
+                    continue
+                if enemyShip.halite_amount > 920:
+                    continue
+                if enemyShip.halite_amount - ship.halite_amount > 700:
+                    continue
+                self[target_pos].booked = True
+                break
 
+    def getAdjacentEnemyShips(self, player, position):
+        enemyShips = []
+        for target_pos in ship.position.get_surrounding_cardinals():
+            adjacentShip = self[target_pos].ship
+            if self.isEnemyShip(player, adjacentShip):
+                enemyShips.append(adjacentShip)
+        
+        return enemyShips
+
+    def findClosestDropPoint(self, player, position, futureDropOffs=None):
+        """
+        :param ship: ship to find closest dropPoint to
+        :return: tuple containing dropPoint and distance to droppoint
+        """
+        dropPoints = set(map(lambda dropoff: dropoff.position, player.get_dropoffs()))
+        if futureDropOffs:
+            dropPoints.update(futureDropOffs)
+        closestDropPoint = player.shipyard.position
+        distance = self.calculate_distance(closestDropPoint, position)
+        for dropPoint in dropPoints:
+            distanceToDropPoint = self.calculate_distance(dropPoint, position)
+            if(distanceToDropPoint < distance):
+                closestDropPoint = dropPoint
+                distance = distanceToDropPoint
+        
+        return (closestDropPoint, distance)
+
+
+    def isEnemyShip(self, player, ship):
+        """
+        :param player: player who owns friendly ships
+        :param ship: ship to check
+        """
+        if not ship:
+            return False
+        return ship.owner != player
 
     def getPercentHaliteLeft(self):
         return self.totalHalite / self.initialTotalHalite
