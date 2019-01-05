@@ -227,28 +227,29 @@ class GameMap:
         return Direction.Still
     
     def predictCollisions(self, ship):
-        for target_pos in ship.position.get_surrounding_cardinals():
-            if self[target_pos].booked:
-                continue
-            player = self.players[ship.owner]
-            closestDropPointDistance = self.findClosestDropPoint(player, target_pos)[1]
-            if closestDropPointDistance <= 1:
-                continue
-            if self.isEnemyShip(player, self[target_pos].ship):
-                self[target_pos].booked = True
-                continue
-            if self[target_pos].halite_amount < self.haliteNeededToSearch / 2:
-                continue
-            adjacentEnemyShips = self.getAdjacentEnemyShips(player, target_pos)
-            for enemyShip in adjacentEnemyShips:
-                if self[target_pos].halite_amount < self[enemyShip.position].halite_amount:
+        if len(self.players) == 4:
+            for target_pos in ship.position.get_surrounding_cardinals():
+                if self[target_pos].booked:
                     continue
-                if enemyShip.halite_amount > 920:
+                player = self.players[ship.owner]
+                closestDropPointDistance = self.findClosestDropPoint(player, target_pos)[1]
+                if closestDropPointDistance <= 1:
                     continue
-                if enemyShip.halite_amount - ship.halite_amount > 700:
+                if self.isEnemyShip(player, self[target_pos].ship):
+                    self[target_pos].booked = True
                     continue
-                self[target_pos].booked = True
-                break
+                if self[target_pos].halite_amount < self.haliteNeededToSearch / 2:
+                    continue
+                adjacentEnemyShips = self.getAdjacentEnemyShips(player, target_pos)
+                for enemyShip in adjacentEnemyShips:
+                    if self[target_pos].halite_amount < self[enemyShip.position].halite_amount:
+                        continue
+                    if enemyShip.halite_amount > 920:
+                        continue
+                    if enemyShip.halite_amount - ship.halite_amount > 700:
+                        continue
+                    self[target_pos].booked = True
+                    break
 
     def getAdjacentEnemyShips(self, player, position):
         enemyShips = []
