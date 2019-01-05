@@ -210,6 +210,19 @@ class GameMap:
             if not self[target_pos].booked:
                 self[target_pos].booked = True
                 return direction
+
+        for direction in Direction.get_all_cardinals():
+            target_pos = ship.position.directional_offset(direction)
+            if self.isEnemyShip(self.players[ship.owner], self[target_pos].ship):
+                self[target_pos].booked = True
+                return direction
+
+        for direction in Direction.get_all_cardinals():
+            target_pos = ship.position.directional_offset(direction)
+            if not self[target_pos].ship:
+                self[target_pos].booked = True
+                return direction
+
         self[ship.position].booked = True
         return Direction.Still
     
@@ -217,17 +230,18 @@ class GameMap:
         for target_pos in ship.position.get_surrounding_cardinals():
             if self[target_pos].booked:
                 continue
-            closestDropPointDistance = self.findClosestDropPoint(ship.owner, target_pos)[1]
+            player = self.players[ship.owner]
+            closestDropPointDistance = self.findClosestDropPoint(player, target_pos)[1]
             if closestDropPointDistance <= 1:
                 continue
-            if self.isEnemyShip(ship.owner, self[target_pos].ship):
+            if self.isEnemyShip(player, self[target_pos].ship):
                 self[target_pos].booked = True
                 continue
-            adjacentEnemyShips = self.getAdjacentEnemyShips(ship.owner, target_pos)
+            if self[target_pos].halite_amount < self.haliteNeededToSearch / 2:
+                continue
+            adjacentEnemyShips = self.getAdjacentEnemyShips(player, target_pos)
             for enemyShip in adjacentEnemyShips:
                 if self[target_pos].halite_amount < self[enemyShip.position].halite_amount:
-                    continue
-                if self[target_pos].halite_amount < self.haliteNeededToSearch / 2:
                     continue
                 if enemyShip.halite_amount > 920:
                     continue
@@ -238,7 +252,7 @@ class GameMap:
 
     def getAdjacentEnemyShips(self, player, position):
         enemyShips = []
-        for target_pos in ship.position.get_surrounding_cardinals():
+        for target_pos in position.get_surrounding_cardinals():
             adjacentShip = self[target_pos].ship
             if self.isEnemyShip(player, adjacentShip):
                 enemyShips.append(adjacentShip)
@@ -271,7 +285,7 @@ class GameMap:
         """
         if not ship:
             return False
-        return ship.owner != player
+        return ship.owner != player.id
 
     def getPercentHaliteLeft(self):
         return self.totalHalite / self.initialTotalHalite
@@ -279,6 +293,8 @@ class GameMap:
     def getMostWealthyAdjacentCell(self, ship):
         maxHalite = 0
         bestCell = None
+
+        self.predictCollisions(ship)
 
         for cardinal in ship.position.get_surrounding_cardinals():
             if not self[cardinal].is_occupied and not self[cardinal].booked:
@@ -294,28 +310,6 @@ class GameMap:
         goalCells.sort(key = lambda goalCell: ((self.calculate_distance(position, goalCell)) / self.width) - \
             (self[goalCell].halite_amount / constants.MAX_HALITE))
         return goalCells[0]
-
-    def updateGoalCells(self, wealthyMinimum, dropPoint):
-        """
-        Return ordered list of wealthy cells by distance away from dropPoint
-
-        :param wealthyMinimum: halite needed to be in list
-        :param dropPoint: drop off or shipyard
-        :return: True if found wealthy goal cells, False otherwise
-        """
-        goalCells = []
-        for i in range(self.width):
-            for j in range(self.height):
-                currentPosition = Position(i, j)
-                if self[currentPosition].halite_amount > wealthyMinimum and not self[currentPosition].has_structure:
-                    goalCells.append(currentPosition)
-        # logging.info(f"All wealthy cells: {goalCells}")
-        goalCells.sort(key = lambda wealthyCell: ((self.calculate_distance(dropPoint.position, wealthyCell)) / self.width) - \
-            (self[wealthyCell].halite_amount / constants.MAX_HALITE))
-        if goalCells:
-            dropPoint.goalCells = goalCells
-            return True
-        return False
 
     def getTotalHaliteAroundAPoint(self, centerPosition, radius):
         totalHalite = 0
