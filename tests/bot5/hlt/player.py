@@ -53,6 +53,9 @@ class Player:
         """
         return ship_id in self._ships
 
+    def __eq__(self, other):
+        return self.id == other.id
+
 
     @staticmethod
     def _generate():

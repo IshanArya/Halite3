@@ -152,6 +152,18 @@ class GameMap:
                                   else Direction.invert(y_cardinality))
         return possible_moves
 
+    def getClosestAdjacentCell(self, ship, position):
+        shortestDistance = 1000
+        closestCell = None
+        for direction in Direction.get_all_cardinals():
+            target_pos = position.directional_offset(direction)
+            currentDistance = self.calculate_distance(ship.position, target_pos)
+            if currentDistance < shortestDistance:
+                closestCell = target_pos
+                shortestDistance = currentDistance
+        
+        return closestCell
+
     def naive_navigate(self, ship, destination):
         """
         Returns a singular safe move towards the destination.
@@ -181,6 +193,8 @@ class GameMap:
         :return: A direction.
         """
 
+        self.predictCollisions(ship)
+
         for direction in self.get_unsafe_moves(ship.position, destination):
             target_pos = ship.position.directional_offset(direction)
             if not self[target_pos].booked:
@@ -196,11 +210,83 @@ class GameMap:
             if not self[target_pos].booked:
                 self[target_pos].booked = True
                 return direction
+
+        for direction in Direction.get_all_cardinals():
+            target_pos = ship.position.directional_offset(direction)
+            if self.isEnemyShip(self.players[ship.owner], self[target_pos].ship):
+                self[target_pos].booked = True
+                return direction
+
+        for direction in Direction.get_all_cardinals():
+            target_pos = ship.position.directional_offset(direction)
+            if not self[target_pos].ship:
+                self[target_pos].booked = True
+                return direction
+
         self[ship.position].booked = True
         return Direction.Still
     
     def predictCollisions(self, ship):
+        if len(self.players) == 4:
+            for target_pos in ship.position.get_surrounding_cardinals():
+                if self[target_pos].booked:
+                    continue
+                player = self.players[ship.owner]
+                closestDropPointDistance = self.findClosestDropPoint(player, target_pos)[1]
+                if closestDropPointDistance <= 1:
+                    continue
+                if self.isEnemyShip(player, self[target_pos].ship):
+                    self[target_pos].booked = True
+                    continue
+                if self[target_pos].halite_amount < self.haliteNeededToSearch / 2:
+                    continue
+                adjacentEnemyShips = self.getAdjacentEnemyShips(player, target_pos)
+                for enemyShip in adjacentEnemyShips:
+                    if self[target_pos].halite_amount < self[enemyShip.position].halite_amount:
+                        continue
+                    if enemyShip.halite_amount > 920:
+                        continue
+                    if enemyShip.halite_amount - ship.halite_amount > 700:
+                        continue
+                    self[target_pos].booked = True
+                    break
 
+    def getAdjacentEnemyShips(self, player, position):
+        enemyShips = []
+        for target_pos in position.get_surrounding_cardinals():
+            adjacentShip = self[target_pos].ship
+            if self.isEnemyShip(player, adjacentShip):
+                enemyShips.append(adjacentShip)
+        
+        return enemyShips
+
+    def findClosestDropPoint(self, player, position, futureDropOffs=None):
+        """
+        :param ship: ship to find closest dropPoint to
+        :return: tuple containing dropPoint and distance to droppoint
+        """
+        dropPoints = set(map(lambda dropoff: dropoff.position, player.get_dropoffs()))
+        if futureDropOffs:
+            dropPoints.update(futureDropOffs)
+        closestDropPoint = player.shipyard.position
+        distance = self.calculate_distance(closestDropPoint, position)
+        for dropPoint in dropPoints:
+            distanceToDropPoint = self.calculate_distance(dropPoint, position)
+            if(distanceToDropPoint < distance):
+                closestDropPoint = dropPoint
+                distance = distanceToDropPoint
+        
+        return (closestDropPoint, distance)
+
+
+    def isEnemyShip(self, player, ship):
+        """
+        :param player: player who owns friendly ships
+        :param ship: ship to check
+        """
+        if not ship:
+            return False
+        return ship.owner != player.id
 
     def getPercentHaliteLeft(self):
         return self.totalHalite / self.initialTotalHalite
@@ -208,6 +294,8 @@ class GameMap:
     def getMostWealthyAdjacentCell(self, ship):
         maxHalite = 0
         bestCell = None
+
+        self.predictCollisions(ship)
 
         for cardinal in ship.position.get_surrounding_cardinals():
             if not self[cardinal].is_occupied and not self[cardinal].booked:
@@ -223,28 +311,6 @@ class GameMap:
         goalCells.sort(key = lambda goalCell: ((self.calculate_distance(position, goalCell)) / self.width) - \
             (self[goalCell].halite_amount / constants.MAX_HALITE))
         return goalCells[0]
-
-    def updateGoalCells(self, wealthyMinimum, dropPoint):
-        """
-        Return ordered list of wealthy cells by distance away from dropPoint
-
-        :param wealthyMinimum: halite needed to be in list
-        :param dropPoint: drop off or shipyard
-        :return: True if found wealthy goal cells, False otherwise
-        """
-        goalCells = []
-        for i in range(self.width):
-            for j in range(self.height):
-                currentPosition = Position(i, j)
-                if self[currentPosition].halite_amount > wealthyMinimum and not self[currentPosition].has_structure:
-                    goalCells.append(currentPosition)
-        # logging.info(f"All wealthy cells: {goalCells}")
-        goalCells.sort(key = lambda wealthyCell: ((self.calculate_distance(dropPoint.position, wealthyCell)) / self.width) - \
-            (self[wealthyCell].halite_amount / constants.MAX_HALITE))
-        if goalCells:
-            dropPoint.goalCells = goalCells
-            return True
-        return False
 
     def getTotalHaliteAroundAPoint(self, centerPosition, radius):
         totalHalite = 0
