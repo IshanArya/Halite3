@@ -123,7 +123,9 @@ def evaluateBestMoveForShip(ship):
 
 
 # Pregame
-wealthyMapCells = game_map.getComboWealthyCells(2*haliteNeededToSearch, me.shipyard.position,me)
+wealthyMapCells = game_map.getWealthyCells(2*haliteNeededToSearch, me.shipyard.position)
+logging.info(f"Shipyard Position {me.shipyard.position}")
+logging.info(f"Wealthy Map Cells: {wealthyMapCells}")
 
 if game_map.width == 64:
     spawnTurnDivider = 1.8
@@ -149,8 +151,8 @@ while True:
     if game.turn_number > 50 and game.turn_number % 10 == 0:
 
         logging.info(f"Finding wealthy cells with at least {haliteNeededToSearch * 2} halite.")
-        tempWealthyMapCells = game_map.getComboWealthyCells(
-            haliteNeededToSearch * 2, me.shipyard.position,me)
+        tempWealthyMapCells = game_map.getWealthyCells(
+            haliteNeededToSearch * 2, me.shipyard.position)
         if tempWealthyMapCells:
             wealthyMapCells = tempWealthyMapCells
             logging.info(f"Wealthy Map Cells Prioritized: {wealthyMapCells}")

@@ -244,6 +244,24 @@ class GameMap:
             return sorted(wealthyMapCells, key = lambda wealthyCell: ((self.calculate_distance(shipyardPosition, wealthyCell) - distance_mean) / distance_sd) - (self[wealthyCell].halite_amount - self.averageHaliteAmount)/ self.haliteAmountStandardDeviation)
         else:
             return sorted(wealthyMapCells, key = lambda wealthyCell: ((self.calculate_distance(shipyardPosition, wealthyCell)/self.width) - (self[wealthyCell].halite_amount)/ constants.MAX_HALITE))
+    def getWealthyCellsOG(self, wealthyMinimum, shipyardPosition):
+        """
+        Return ordered list of wealthy cells by distance away from shipyard
+        :param wealthyMinimum: halite needed to be in list
+        :param shipyardPosition: position of shipyard
+        :return: ordered list of wealthy cells
+        """
+        wealthyMapCells = []
+
+        for i in range(self.width):
+            for j in range(self.height):
+                currentPosition = Position(i, j)
+                if self[currentPosition].halite_amount >= wealthyMinimum and not self[currentPosition].has_structure:
+                    wealthyMapCells.append(currentPosition)
+
+        # logging.info(f"All wealthy cells: {wealthyMapCells}")
+
+        return sorted(wealthyMapCells, key = lambda wealthyCell: ((self.calculate_distance(shipyardPosition, wealthyCell)/self.width) - (self[wealthyCell].halite_amount)/ constants.MAX_HALITE))
     def getHypotheticalInspiredWealthyCells(self,wealthyMinimum,shipyardPosition,me):
         '''
         Return ordered list of wealthy cells by distance away from shipyard while taking into account Inspiration
